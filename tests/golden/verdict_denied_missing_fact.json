@@ -1,0 +1,34 @@
+{
+  "schema_version": "0.1.0",
+  "status": "denied",
+  "failed_rules": [
+    {
+      "rule_id": "continuity.freeze_override",
+      "description": "Deploy to prod requires freeze_override when target is frozen",
+      "severity": "deny"
+    }
+  ],
+  "used_facts": [
+    {
+      "subject": "actor",
+      "field": "granted_scope",
+      "value": "prod",
+      "source": "standing:grant-a1b2c3d4"
+    },
+    {
+      "subject": "target",
+      "field": "frozen",
+      "value": "true",
+      "source": "continuity:freeze-001"
+    }
+  ],
+  "warnings": [],
+  "missing_facts": [
+    {
+      "rule_id": "continuity.freeze_override",
+      "subject": "target",
+      "field": "freeze_override"
+    }
+  ],
+  "contradictions": []
+}

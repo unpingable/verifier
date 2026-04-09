@@ -1,0 +1,6 @@
+{
+  "action": "deploy",
+  "actor": "worker-a",
+  "target": "service/api",
+  "scope": "prod"
+}

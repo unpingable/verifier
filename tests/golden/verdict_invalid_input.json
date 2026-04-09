@@ -1,0 +1,41 @@
+{
+  "schema_version": "0.1.0",
+  "status": "invalid_input",
+  "failed_rules": [],
+  "used_facts": [
+    {
+      "subject": "target",
+      "field": "frozen",
+      "value": "true",
+      "source": "continuity:freeze-001"
+    },
+    {
+      "subject": "target",
+      "field": "frozen",
+      "value": "false",
+      "source": "continuity:freeze-002"
+    }
+  ],
+  "warnings": [],
+  "missing_facts": [],
+  "contradictions": [
+    {
+      "subject": "target",
+      "field": "frozen",
+      "facts": [
+        {
+          "subject": "target",
+          "field": "frozen",
+          "value": "true",
+          "source": "continuity:freeze-001"
+        },
+        {
+          "subject": "target",
+          "field": "frozen",
+          "value": "false",
+          "source": "continuity:freeze-002"
+        }
+      ]
+    }
+  ]
+}

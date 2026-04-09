@@ -1,0 +1,6 @@
+{
+  "subject": "actor",
+  "field": "granted_scope",
+  "value": "prod",
+  "source": "standing:grant-a1b2c3d4"
+}

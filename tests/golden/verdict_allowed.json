@@ -1,0 +1,16 @@
+{
+  "schema_version": "0.1.0",
+  "status": "allowed",
+  "failed_rules": [],
+  "used_facts": [
+    {
+      "subject": "actor",
+      "field": "granted_scope",
+      "value": "prod",
+      "source": "standing:grant-a1b2c3d4"
+    }
+  ],
+  "warnings": [],
+  "missing_facts": [],
+  "contradictions": []
+}
