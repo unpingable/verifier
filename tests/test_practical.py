@@ -158,20 +158,16 @@ class TestContinuityFact:
 # ------------------------------------------------------------------
 
 class TestConflictingFacts:
-    """Feed contradictory facts.  The Z3 function model
-    (field_val is a function) makes this unsatisfiable — the solver
-    cannot assign two values to the same (subject, field) pair.
+    """Feed contradictory facts.  The fact-consistency phase catches
+    these before the solver runs and returns invalid_input with the
+    specific conflicting facts and their sources.
 
-    Current behavior: contradictory facts make the solver globally
-    inconsistent → every rule appears violated.  This is NOT real
-    contradiction detection — it's incidental unsat.
-
-    Future: a separate fact-consistency phase should detect this
-    before rule evaluation and return invalid_input, not denied.
+    This separates "your rules deny this" from "your input state is
+    garbage" — an important distinction for explainability.
     """
 
-    def test_denies_on_inconsistent_fact_set_currently_unsat(self):
-        """Contradictory frozen facts → global unsat, not real detection."""
+    def test_contradictory_facts_return_invalid_input(self):
+        """Contradictory frozen facts → invalid_input, not denied."""
         facts = [
             Fact(subject="target", field="frozen", value="true", source="continuity:freeze-001"),
             Fact(subject="target", field="frozen", value="false", source="continuity:freeze-002"),
@@ -179,18 +175,66 @@ class TestConflictingFacts:
         ]
         verdict = verify(PROPOSAL, facts, [SCOPE_RULE, FREEZE_RULE])
 
-        # Contradictory facts make the solver inconsistent → everything denied
-        assert verdict.status == "denied"
+        assert verdict.status == "invalid_input"
+        assert len(verdict.contradictions) == 1
+        c = verdict.contradictions[0]
+        assert c.subject == "target"
+        assert c.field == "frozen"
+        assert len(c.facts) == 2
+        sources = {f.source for f in c.facts}
+        assert "continuity:freeze-001" in sources
+        assert "continuity:freeze-002" in sources
 
-    def test_denies_on_inconsistent_grant_currently_unsat(self):
-        """Contradictory scope facts → global unsat, not real detection."""
+    def test_contradictory_grant_returns_invalid_input(self):
+        """Contradictory scope facts → invalid_input with source ids."""
         facts = [
             Fact(subject="actor", field="granted_scope", value="prod", source="standing:grant-101"),
             Fact(subject="actor", field="granted_scope", value="staging", source="standing:grant-102"),
         ]
         verdict = verify(PROPOSAL, facts, [SCOPE_RULE])
 
-        assert verdict.status == "denied"
+        assert verdict.status == "invalid_input"
+        assert len(verdict.contradictions) == 1
+        c = verdict.contradictions[0]
+        assert c.subject == "actor"
+        assert c.field == "granted_scope"
+
+    def test_no_rules_evaluated_on_invalid_input(self):
+        """When input is invalid, rules are not evaluated at all."""
+        facts = [
+            Fact(subject="actor", field="granted_scope", value="prod", source="standing:grant-101"),
+            Fact(subject="actor", field="granted_scope", value="staging", source="standing:grant-102"),
+        ]
+        verdict = verify(PROPOSAL, facts, [SCOPE_RULE])
+
+        assert verdict.status == "invalid_input"
+        assert verdict.failed_rules == []
+        assert verdict.warnings == []
+        assert verdict.missing_facts == []
+
+    def test_multiple_contradictions_all_reported(self):
+        """Multiple contradictory pairs → all reported."""
+        facts = [
+            Fact(subject="actor", field="granted_scope", value="prod", source="s:1"),
+            Fact(subject="actor", field="granted_scope", value="staging", source="s:2"),
+            Fact(subject="target", field="frozen", value="true", source="c:1"),
+            Fact(subject="target", field="frozen", value="false", source="c:2"),
+        ]
+        verdict = verify(PROPOSAL, facts, [SCOPE_RULE, FREEZE_RULE])
+
+        assert verdict.status == "invalid_input"
+        assert len(verdict.contradictions) == 2
+
+    def test_duplicate_same_value_is_not_contradiction(self):
+        """Same (subject, field, value) from two sources is redundant, not contradictory."""
+        facts = [
+            Fact(subject="actor", field="granted_scope", value="prod", source="standing:grant-101"),
+            Fact(subject="actor", field="granted_scope", value="prod", source="standing:grant-103"),
+        ]
+        verdict = verify(PROPOSAL, facts, [SCOPE_RULE])
+
+        # Same value from two sources — not a contradiction
+        assert verdict.status != "invalid_input"
 
 
 # ------------------------------------------------------------------

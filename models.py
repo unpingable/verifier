@@ -80,13 +80,21 @@ class MissingFact(BaseModel):
     field: str
 
 
+class FactContradiction(BaseModel):
+    """Two facts that assert different values for the same (subject, field)."""
+    subject: str
+    field: str
+    facts: list[Fact]
+
+
 class Verdict(BaseModel):
     """Verifier output.  Governor or other consumers wrap this
     into their own receipts -- the verifier does not produce
     governance decisions, only solver verdicts.
     """
-    status: Literal["allowed", "denied"]
+    status: Literal["allowed", "denied", "invalid_input"]
     failed_rules: list[FailedRule] = []
     used_facts: list[Fact] = []
     warnings: list[FailedRule] = []
     missing_facts: list[MissingFact] = []
+    contradictions: list[FactContradiction] = []
