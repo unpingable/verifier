@@ -142,7 +142,7 @@ class TestScopeVerifier:
         )
         proposal = Proposal(action="read", actor="anyone", target="anything", scope="read")
         facts = [
-            Fact(subject="system", field="lockdown", value="true"),
+            Fact(subject="system", field="lockdown", value="true", source="system:lockdown-state"),
         ]
         verdict = verify(proposal, facts, [always_deny])
 
