@@ -1,0 +1,31 @@
+{
+  "proposal": {
+    "action": "deploy",
+    "actor": "worker-a",
+    "target": "service/api",
+    "scope": "prod"
+  },
+  "facts": [
+    {
+      "subject": "actor",
+      "field": "granted_scope",
+      "value": "staging",
+      "source": "standing:grant-100"
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "standing.scope_match",
+      "description": "Requested scope must match the actor's granted scope for this action/target",
+      "when": [
+        {"subject": "proposal", "field": "action", "op": "eq", "value": "deploy"},
+        {"subject": "proposal", "field": "target", "op": "eq", "value": "service/api"}
+      ],
+      "require": [
+        {"subject": "proposal", "field": "scope", "op": "eq", "value": "prod"},
+        {"subject": "actor", "field": "granted_scope", "op": "eq", "value": "prod"}
+      ],
+      "severity": "deny"
+    }
+  ]
+}

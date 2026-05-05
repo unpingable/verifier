@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.1.0",
+  "schema_version": "0.2.0",
   "status": "allowed",
   "failed_rules": [],
   "used_facts": [
@@ -7,10 +7,13 @@
       "subject": "actor",
       "field": "granted_scope",
       "value": "prod",
-      "source": "standing:grant-a1b2c3d4"
+      "source": "standing:grant-a1b2c3d4",
+      "claim_state": "current"
     }
   ],
   "warnings": [],
   "missing_facts": [],
-  "contradictions": []
+  "contradictions": [],
+  "stale_facts": [],
+  "dimension_verdicts": {}
 }

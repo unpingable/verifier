@@ -16,3 +16,27 @@ dependencies = [
 dev = [
     "pytest>=7.0",
 ]
+
+[project.scripts]
+verifier-check = "cli:main"
+verifier-mcp = "mcp_server:main"
+
+[tool.hatch.build.targets.wheel]
+include = [
+    "models.py",
+    "compiler.py",
+    "verifier.py",
+    "adapters.py",
+    "runner.py",
+    "cli.py",
+    "mcp_server.py",
+]
+
+[tool.hatch.build.targets.wheel.sources]
+"models.py" = "models.py"
+"compiler.py" = "compiler.py"
+"verifier.py" = "verifier.py"
+"adapters.py" = "adapters.py"
+"runner.py" = "runner.py"
+"cli.py" = "cli.py"
+"mcp_server.py" = "mcp_server.py"

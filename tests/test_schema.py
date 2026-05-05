@@ -10,12 +10,7 @@ major version event, not a casual fix.
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from models import (
     SCHEMA_VERSION,
@@ -142,6 +137,19 @@ class TestConstraintRuleContract:
         assert r.severity == "deny"
         assert r.when == []
         assert r.require == []
+
+    def test_kind_defaults_to_constraint(self):
+        r = ConstraintRule(rule_id="r.1", description="a rule")
+        assert r.kind == "constraint"
+
+    @pytest.mark.parametrize("kind", ["basis", "precedence", "standing", "constraint"])
+    def test_accepts_known_kinds(self, kind):
+        r = ConstraintRule(rule_id="r.1", description="d", kind=kind)
+        assert r.kind == kind
+
+    def test_rejects_unknown_kind(self):
+        with pytest.raises(Exception):
+            ConstraintRule(rule_id="r.1", description="d", kind="other")
 
 
 class TestVerdictContract:

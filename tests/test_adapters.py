@@ -7,11 +7,6 @@ the adapters.
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
 from adapters import make_proposal, memory_to_facts, standing_grant_to_facts
 from models import ConstraintAtom, ConstraintRule, Fact
 from verifier import verify

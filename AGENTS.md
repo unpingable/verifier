@@ -40,16 +40,42 @@ Always run tests before proposing commits. Never claim tests pass without runnin
 
 ---
 
+## Ecosystem position
+
+Verifier is part of the Governor ecosystem, but it is not Governor-gated.
+It can be used directly as a Python library, a standalone CLI (`verifier-check`),
+or an MCP tool (`verifier-mcp`). All three surfaces funnel through
+`runner.run_payload` — one truth, three wrappers. Never duplicate verification
+logic in the CLI or MCP server; add to `runner.py` instead.
+
 ## Repository layout
 
 ```
 verifier/
-├── models.py          # Typed IR: Proposal, Fact, ConstraintRule, Verdict
+├── models.py          # Typed IR: Proposal, Fact (claim_state), ConstraintRule
+│                      #   (kind, basis_effect), Verdict (triad +
+│                      #   dimension_verdicts + stale_facts)
 ├── compiler.py        # models → Z3 (has_fact + field_val predicates)
-├── verifier.py        # Per-rule checking, closed-world, diagnostics
+├── verifier.py        # Per-rule checking, closed-world, claim_state pre-gate,
+│                      #   dimension projection, advisory aggregation
+├── runner.py          # run_payload — single dispatch shared by all surfaces
+├── cli.py             # verifier-check standalone CLI
+├── mcp_server.py      # verifier-mcp NDJSON stdio server
+├── adapters.py        # Domain → Fact adapters
 ├── tests/
-│   ├── test_scope_verifier.py   # Slice 0 basics
-│   └── test_practical.py        # Concrete "does it have hands" suite
+│   ├── fixtures/                 # Canonical combined payloads (allowed/denied/invalid)
+│   ├── golden/                   # Wire-format goldens (drift detector)
+│   ├── test_runner.py            # In-process dispatch
+│   ├── test_cli.py               # Subprocess CLI round-trips
+│   ├── test_mcp.py               # In-process MCP dispatch
+│   ├── test_parity.py            # Cross-surface verdict identity (lib == CLI == MCP)
+│   ├── test_invariants.py        # Closed-world soul invariant
+│   ├── test_dimensions.py        # Per-kind verdict projection
+│   ├── test_advisory.py          # Verdict triad + basis_effect validation
+│   ├── test_claim_state.py       # Stale/revoked/expired pre-gate
+│   ├── test_properties.py        # Permutation invariance + determinism
+│   ├── test_scope_verifier.py    # Slice 0 basics
+│   └── test_practical.py         # Concrete "does it have hands" suite
 ├── pyproject.toml
 ├── CLAUDE.md
 ├── AGENTS.md
@@ -72,6 +98,10 @@ verifier/
 2. Every denial reports all failing rules, not a minimal subset
 3. Warn-severity rules populate warnings but never cause denial
 4. The verifier does not produce governance decisions
+5. Stale / revoked / expired evidence cannot produce `allowed` (filtered before solver)
+6. claim_state pre-gate is scoped to facts referenced by a rule — no global stale-scanning
+7. `invalid_input` is structural failure, not part of the admissibility triad (`allowed | advisory | denied`)
+8. Verdict.status is invariant under permutation of facts and rules
 
 ---
 
@@ -89,6 +119,8 @@ Ask for clarification rather than guessing, especially around:
 - Whether a new check belongs in the verifier or in governance
 - Whether a fact should be modeled as presence vs. value
 - Anything that changes the closed-world assumption
+- Anything that changes the verdict triad or its aggregation rules
+- Whether the verifier should adopt a Lean-side concept (verdict-vocabulary porting requires design review, not just implementation)
 
 ---
 

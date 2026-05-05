@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.1.0",
+  "schema_version": "0.2.0",
   "status": "invalid_input",
   "failed_rules": [],
   "used_facts": [
@@ -7,13 +7,15 @@
       "subject": "target",
       "field": "frozen",
       "value": "true",
-      "source": "continuity:freeze-001"
+      "source": "continuity:freeze-001",
+      "claim_state": "current"
     },
     {
       "subject": "target",
       "field": "frozen",
       "value": "false",
-      "source": "continuity:freeze-002"
+      "source": "continuity:freeze-002",
+      "claim_state": "current"
     }
   ],
   "warnings": [],
@@ -27,15 +29,19 @@
           "subject": "target",
           "field": "frozen",
           "value": "true",
-          "source": "continuity:freeze-001"
+          "source": "continuity:freeze-001",
+          "claim_state": "current"
         },
         {
           "subject": "target",
           "field": "frozen",
           "value": "false",
-          "source": "continuity:freeze-002"
+          "source": "continuity:freeze-002",
+          "claim_state": "current"
         }
       ]
     }
-  ]
+  ],
+  "stale_facts": [],
+  "dimension_verdicts": {}
 }

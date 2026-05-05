@@ -7,11 +7,6 @@ facts and rules change to exercise one specific verifier behavior.
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
 from models import ConstraintAtom, ConstraintRule, Fact, MissingFact, Proposal
 from verifier import verify
 

@@ -2,5 +2,6 @@
   "subject": "actor",
   "field": "granted_scope",
   "value": "prod",
-  "source": "standing:grant-a1b2c3d4"
+  "source": "standing:grant-a1b2c3d4",
+  "claim_state": "current"
 }
