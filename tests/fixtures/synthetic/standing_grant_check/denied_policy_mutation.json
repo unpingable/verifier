@@ -1,0 +1,82 @@
+{
+  "proposal": {
+    "action": "edit_file",
+    "actor": "claude-code",
+    "target": "agent_gov/docs/SPEC.md",
+    "scope": "agent_gov/docs"
+  },
+  "facts": [
+    {
+      "subject": "actor",
+      "field": "principal_id",
+      "value": "claude-code",
+      "source": "standing:grant-123",
+      "claim_state": "current"
+    },
+    {
+      "subject": "actor",
+      "field": "granted_scope",
+      "value": "agent_gov/docs",
+      "source": "standing:grant-123",
+      "claim_state": "current"
+    },
+    {
+      "subject": "actor",
+      "field": "granted_effect",
+      "value": "edit_candidate",
+      "source": "standing:grant-123",
+      "claim_state": "current"
+    },
+    {
+      "subject": "proposal",
+      "field": "effect",
+      "value": "policy_mutation",
+      "source": "proposal"
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "standing.actor_match",
+      "description": "Proposal actor must match the standing grant's principal",
+      "kind": "standing",
+      "require": [
+        {"subject": "proposal", "field": "actor", "op": "eq", "value": "claude-code"},
+        {"subject": "actor", "field": "principal_id", "op": "eq", "value": "claude-code"}
+      ]
+    },
+    {
+      "rule_id": "standing.scope_match",
+      "description": "Proposal scope must equal the grant's scope",
+      "kind": "standing",
+      "require": [
+        {"subject": "proposal", "field": "scope", "op": "eq", "value": "agent_gov/docs"},
+        {"subject": "actor", "field": "granted_scope", "op": "eq", "value": "agent_gov/docs"}
+      ]
+    },
+    {
+      "rule_id": "standing.effect_match",
+      "description": "Proposal effect must equal the grant's granted effect",
+      "kind": "standing",
+      "require": [
+        {"subject": "proposal", "field": "effect", "op": "eq", "value": "edit_candidate"},
+        {"subject": "actor", "field": "granted_effect", "op": "eq", "value": "edit_candidate"}
+      ]
+    },
+    {
+      "rule_id": "basis.standing_grant_123",
+      "description": "Standing grant 123 supports action when actor=claude-code, scope=agent_gov/docs, effect=edit_candidate",
+      "kind": "basis",
+      "basis_effect": "actionable",
+      "when": [
+        {"subject": "proposal", "field": "actor", "op": "eq", "value": "claude-code"}
+      ],
+      "require": [
+        {"subject": "actor", "field": "principal_id", "op": "eq", "value": "claude-code"},
+        {"subject": "actor", "field": "granted_scope", "op": "eq", "value": "agent_gov/docs"},
+        {"subject": "actor", "field": "granted_effect", "op": "eq", "value": "edit_candidate"},
+        {"subject": "proposal", "field": "scope", "op": "eq", "value": "agent_gov/docs"},
+        {"subject": "proposal", "field": "effect", "op": "eq", "value": "edit_candidate"}
+      ]
+    }
+  ]
+}
