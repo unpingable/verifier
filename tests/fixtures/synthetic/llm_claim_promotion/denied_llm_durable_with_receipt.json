@@ -1,0 +1,62 @@
+{
+  "proposal": {
+    "action": "promote_claim",
+    "actor": "claude-opus-4.7",
+    "target": "docs/ARCHITECTURE_NOTES.md",
+    "scope": "claim_promotion"
+  },
+  "facts": [
+    {"subject": "proposal", "field": "effect", "value": "durable_doctrine", "source": "proposal"},
+    {"subject": "claim", "field": "id", "value": "claim.ai_substrate_authority_capture", "source": "chat"},
+    {"subject": "claim", "field": "source", "value": "llm_session", "source": "chat"},
+    {"subject": "claim", "field": "independent_receipt", "value": true, "source": "operator-vouch"}
+  ],
+  "rules": [
+    {
+      "rule_id": "claim.llm_cannot_support_durable",
+      "description": "LLM-only source cannot support durable doctrine",
+      "kind": "constraint",
+      "when": [
+        {"subject": "proposal", "field": "effect", "op": "eq", "value": "durable_doctrine"}
+      ],
+      "require": [
+        {"subject": "claim", "field": "source", "op": "neq", "value": "llm_session"}
+      ]
+    },
+    {
+      "rule_id": "claim.durable_requires_independent_receipt",
+      "description": "Durable doctrine requires an independent receipt",
+      "kind": "constraint",
+      "when": [
+        {"subject": "proposal", "field": "effect", "op": "eq", "value": "durable_doctrine"}
+      ],
+      "require": [
+        {"subject": "claim", "field": "independent_receipt", "op": "eq", "value": true}
+      ]
+    },
+    {
+      "rule_id": "basis.llm_session_advisory",
+      "description": "LLM session is an advisory basis only when proposing advisory_note",
+      "kind": "basis",
+      "basis_effect": "advisory",
+      "when": [
+        {"subject": "claim", "field": "source", "op": "eq", "value": "llm_session"}
+      ],
+      "require": [
+        {"subject": "proposal", "field": "effect", "op": "eq", "value": "advisory_note"}
+      ]
+    },
+    {
+      "rule_id": "basis.human_review_actionable",
+      "description": "Independent human review with receipt is an actionable basis",
+      "kind": "basis",
+      "basis_effect": "actionable",
+      "when": [
+        {"subject": "claim", "field": "source", "op": "eq", "value": "human_review"}
+      ],
+      "require": [
+        {"subject": "claim", "field": "independent_receipt", "op": "eq", "value": true}
+      ]
+    }
+  ]
+}

@@ -4,6 +4,8 @@ Formal admissibility verifier sidecar using Z3. Takes proposals, facts, and cons
 
 Verifier is part of the Governor ecosystem, but it is not Governor-gated. It can be used directly as a Python library, a standalone CLI, or an MCP tool.
 
+> *The verifier can express verdict structure without owning domain truth.*
+
 ## What it does
 
 - Checks whether a proposed action is admissible given grounded facts and named constraint rules

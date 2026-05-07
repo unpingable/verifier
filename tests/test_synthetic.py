@@ -238,3 +238,135 @@ def test_release_gate_dimension_says_failed_not_missing():
     assert dv.status == "failed", (
         f"expected 'failed' (evidence against tests.pass), got {dv.status!r}"
     )
+
+
+# ==================================================================
+# Workflow 3: LLM claim promotion
+# ==================================================================
+#
+# Domain: an operator proposes turning an LLM-generated claim into
+# something durable — repo doctrine, README claim, architecture note.
+# This is the spicy synthetic, the one that directly models the thing
+# everyone else is moralizing about: when does fluent output get to count?
+#
+# The shape of the answer the verifier should produce:
+# - Allowed only when an actionable basis exists (e.g., independent
+#   human review with receipt).
+# - Advisory when the only basis is an LLM session AND the proposal
+#   itself is for an advisory effect (you can hear it; you cannot
+#   ratify it as durable).
+# - Denied when the proposal asks for durable but the basis is LLM
+#   (Rule A — explicit policy that LLM source cannot bridge to durable),
+#   or when the proposal is durable but lacks independent receipt
+#   (Rule B — durable requires receipt regardless of source).
+#
+# Adapter sweat — what didn't translate cleanly:
+#
+# 1. Effect-on-proposal again, third signal for C-1.  Same friction as
+#    Standing (effect=edit_candidate) and Release (repo+version).  This
+#    domain wants `effect=durable_doctrine` or `effect=advisory_note`.
+#    Encoded as a Fact, third time in a row.  C-1 is now a hard signal,
+#    not a quirk.
+#
+# 2. Multi-role actor (C-5 enrichment).  Roles in this domain:
+#    - claimant: who originated the claim (in claim.source)
+#    - proposer: who's asking to promote (in Proposal.actor)
+#    - authority: who can ratify (implicit in the basis rules)
+#    - publisher: where the claim lands (in Proposal.target)
+#    Our schema collapses some of these into one field.  We use
+#    Proposal.actor=proposer and put the rest as facts on claim.* —
+#    works, but reinforces the user's directional lean: actor really
+#    means "accountable initiator," and the field name is too narrow.
+#
+# 3. The "actor IS source" case.  In denied_llm_durable_with_receipt
+#    we set actor="claude-opus-4.7" — the model proposing to promote
+#    its own claim into durable doctrine.  We have no rule that detects
+#    this self-promotion pattern; expressing "actor MUST NOT equal
+#    claim.source" requires atom-pair comparison, which the IR does not
+#    support (C-2 again).  The verdict in that case is still denied,
+#    but for the right reason (LLM source) rather than the spicier
+#    reason (self-promotion).  Recording, not acting.
+#
+# 4. Verdict triad is doing exactly what it was designed to do.  The
+#    advisory case (Rule C fires alone, no actionable basis) produces
+#    status="advisory" with zero rule failures.  This is the
+#    "heard, not authorized" channel that motivated chatty's design
+#    in the first place.  Strong positive signal: the schema was
+#    built for this, and this is what it looks like in use.
+#
+# 5. The "receipt does not bridge sources" property emerges naturally.
+#    Case 4 (denied_llm_durable_with_receipt) has independent_receipt
+#    AND attempts durable AND has LLM source.  Rule B (receipt
+#    requirement) passes; Rule A (no LLM-to-durable) still fails.  The
+#    verdict is denied for the right reason.  This is the verifier
+#    proving that "receipt is necessary but not sufficient" can be
+#    expressed cleanly — orthogonal rules compose into a tight gate.
+
+LLM_CLAIM_CASES = [
+    ("llm_claim_promotion/allowed_durable_with_human_review.json", "allowed"),
+    ("llm_claim_promotion/advisory_llm_advisory_note.json",        "advisory"),
+    ("llm_claim_promotion/denied_llm_attempts_durable.json",       "denied"),
+    ("llm_claim_promotion/denied_llm_durable_with_receipt.json",   "denied"),
+]
+
+
+@pytest.mark.parametrize("fixture,expected", LLM_CLAIM_CASES)
+def test_llm_claim_workflow(fixture, expected):
+    verdict = run_payload(_load(fixture))
+    assert verdict.status == expected, (
+        f"{fixture}: expected {expected}, got {verdict.status}"
+    )
+
+
+def test_llm_claim_advisory_is_basis_level_not_severity_level():
+    """The advisory verdict comes from basis_effect=advisory on a basis
+    rule firing — NOT from any rule having severity=warn.  This pins the
+    distinction chatty hammered: warning means 'this rule did not block,'
+    advisory means 'this basis can be heard but cannot support action.'
+    Different animals."""
+    verdict = run_payload(_load("llm_claim_promotion/advisory_llm_advisory_note.json"))
+
+    assert verdict.status == "advisory"
+    assert verdict.failed_rules == []
+    assert verdict.warnings == [], (
+        "advisory should not be produced via warn-severity rules"
+    )
+
+    # The advisory came from the advisory-basis rule firing.  Verify by
+    # checking the basis dimension passed (the advisory rule didn't
+    # fail; it just doesn't grant action).
+    assert verdict.dimension_verdicts["basis"].status == "passed"
+
+
+def test_llm_claim_receipt_does_not_bridge_sources():
+    """Even with independent_receipt=true, an LLM-source claim cannot
+    promote to durable.  Rule A (LLM cannot support durable) does the
+    work that Rule B (durable requires receipt) cannot — the two are
+    orthogonal gates and both must pass.  This is the synthetic's
+    sharpest test of compositional rule logic."""
+    verdict = run_payload(
+        _load("llm_claim_promotion/denied_llm_durable_with_receipt.json")
+    )
+
+    assert verdict.status == "denied"
+    failed_ids = {r.rule_id for r in verdict.failed_rules}
+    assert "claim.llm_cannot_support_durable" in failed_ids
+    # Rule B (durable_requires_independent_receipt) should NOT fail —
+    # the receipt is present.  The denial is about source, not receipt.
+    assert "claim.durable_requires_independent_receipt" not in failed_ids
+
+
+def test_llm_claim_human_review_unlocks_durable():
+    """The mirror of the previous test: human_review source plus
+    independent_receipt produces an actionable basis that supports
+    durable doctrine.  Confirms the 'durable_doctrine is reachable'
+    invariant — the verifier isn't refusing all durable promotions,
+    only LLM-sourced ones."""
+    verdict = run_payload(
+        _load("llm_claim_promotion/allowed_durable_with_human_review.json")
+    )
+
+    assert verdict.status == "allowed"
+    # The actionable basis fired and held.
+    basis_dv = verdict.dimension_verdicts["basis"]
+    assert basis_dv.status == "passed"

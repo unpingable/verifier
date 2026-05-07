@@ -6,6 +6,10 @@ verifier: formal admissibility verifier sidecar that compiles typed IR into Z3 c
 
 Verifier is part of the Governor ecosystem, but it is not Governor-gated. It can be used directly as a Python library, a standalone CLI (`verifier-check`), or an MCP tool (`verifier-mcp`). All three surfaces funnel through `runner.run_payload` — one truth, three wrappers.
 
+> *The verifier can express verdict structure without owning domain truth.*
+
+This is the substrate property. Confirmed across three semantically different synthetic workflows (Standing grant, release gate, LLM claim promotion) — see `tests/test_synthetic.py` and `CANDIDATES.md`. If a change to the verifier weakens this property, that change is wrong even if the tests pass.
+
 ## What This Is Not
 
 - Not a governor — verdicts go downstream; governance decisions happen elsewhere
