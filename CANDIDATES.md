@@ -10,39 +10,48 @@ When a candidate is resolved (built or rejected), migrate the conclusion
 into CLAUDE.md / AGENTS.md / README.md as appropriate and remove the entry
 here.
 
-## Read of the register after Synthetic Workflows 1–3
+## Read of the register after Synthetic Workflows 1–4
 
-The verifier has now survived three semantically different synthetic
+The verifier has now survived four semantically different synthetic
 domains — Standing grant (authority/lifecycle), release gate (mundane
 constraint checklist), LLM claim promotion (basis/advisory/durable
-boundary) — without schema change. The substrate property holds:
+boundary), NQ suppression (operationally rich gate) — without schema
+change. The substrate property holds:
 
 > *The verifier can express verdict structure without owning domain truth.*
 
-Current read on the register, post-W3:
+Current read on the register, post-W4:
 
-- **C-1 (Proposal shape).** Real and now hard signal. Three workflows,
-  three different "natural" extension shapes. `Proposal` is carrying
-  too much domain-specific shape in a fixed four-field coat. Probably
-  actionable after W4.
-- **C-2 (No variable binding).** Real, but **dangerous**. This is how a
-  boring verifier turns into a tiny logic programming language wearing
-  a fake mustache. Resist unless adapter ergonomics force it past
-  endurance.
+- **C-1 (Proposal shape).** Hard signal across **four workflows** with
+  four different "natural" extension shapes (`effect`, `repo+version`,
+  `effect`, `duration+reason`). `Proposal` is carrying too much
+  domain-specific shape in a fixed four-field coat. **Actionable now.**
+- **C-2 (No variable binding).** Real, but **dangerous**. Two friction
+  shapes seen so far: per-grant rule duplication (W1) and pre-computed
+  boolean facts for interval comparison (W4). Both workarounds work.
+  This is how a boring verifier turns into a tiny logic programming
+  language wearing a fake mustache. Resist.
 - **C-3 (`scope` collision).** Standing-side terminology debt. Out of
   scope for verifier.
 - **C-4 (`claim_state` pre-gate).** Working. Positive signal.
-- **C-5 (Required actor).** Keep required. Likely rename / redefine —
-  candidates: `accountable_subject`, `initiator`, `claimant`,
-  `authority_candidate`. The right name depends on the altitude.
-- **C-6 (Open subject vocabulary).** Working. Positive signal.
+- **C-5 (Required actor).** Keep required. Friction varies by domain:
+  W2 (no natural actor), W3 (multi-role ambiguity), W4 (clean single
+  actor). The friction is shape, not optionality. Likely
+  rename / redefine — candidates: `accountable_subject`, `initiator`,
+  `claimant`, `authority_candidate`. Depends on altitude.
+- **C-6 (Open subject vocabulary).** Working. W2 used tests/parity/etc;
+  W4 used maintenance_window/operator_ack/witness/etc. The schema
+  accommodates naturally.
 - **C-7 (Verdict triad is basis-level).** Strong positive signal. Not
   decoration — actual model structure.
-- **C-8 (No-basis fall-through).** Working. Positive signal.
+- **C-8 (No-basis fall-through).** Working. Confirmed in two
+  independent workflows now (W2 release gate, W4 NQ suppression). Pure
+  constraint workflows are first-class.
 
-**Discipline:** do not act on C-1 / C-5 before W4 (NQ suppression) lands.
-Either W4 confirms the same wound, or it reveals a different one. Both
-outcomes change what the right fix looks like.
+**The wind tunnel exercise's core finding:** four workflows with
+unrelated semantic temperatures all compiled into the same IR, with
+all friction concentrated on **C-1 (Proposal shape)**. That is now
+the load-bearing question.
 
 ---
 
@@ -63,16 +72,21 @@ fields.
   again carries an `effect` dimension (`durable_doctrine` vs
   `advisory_note`). Same encoding, same friction. Three workflows now
   pointing at the same shape question.
+- **Synthetic 4 (NQ suppression).** Workflow's natural shape is
+  `{action, finding, duration, reason}`. We mapped finding→target,
+  invented actor=nightshift-operator, set scope="ops", and pushed
+  duration_hours and reason into facts on subject="proposal".
+  Fourth domain, fourth different extension shape, same workaround.
 
 **Question.** Should `Proposal` grow extension fields (or a `dimensions`
 map), or should all proposal-shaped data except action/actor/target live
-in facts? Three workflows in, three different extension shapes
-(`effect`, `repo`+`version`, `effect` again).
+in facts? Four workflows in, four different extension shapes
+(`effect`, `repo`+`version`, `effect`, `duration`+`reason`).
 
-**Status.** Open, **signal now hard**. Three workflows pointing at the
-same friction is no longer noise. Re-evaluate after workflow 4 (NQ
-suppression) — but the shape of a probable resolution is becoming
-visible.
+**Status.** **Actionable.** Four workflows in a row sweat the same
+friction — that's no longer signal collection, it's a definite shape.
+The wind tunnel exercise has produced its finding. Awaiting design
+review for resolution direction (see directional lean below).
 
 **Directional lean (recorded for future review, not authorization to
 build).** When this resolves, the likely move is **not** "add specific
@@ -104,9 +118,16 @@ Wait until workflows 3–4 sweat before reaching for the wrench.
 value. Atoms cannot compare two atoms (e.g.
 "`proposal.scope` must equal `actor.granted_scope`").
 
-**Surfaced by.** Synthetic 1. Each Standing grant compiles to its own
-per-grant rule with the grant's literal values baked into the rule body.
-Tractable at small scale; not free at large scale.
+**Surfaced by.**
+- **Synthetic 1 (Standing grant check).** Each Standing grant compiles
+  to its own per-grant rule with the grant's literal values baked into
+  the rule body. Tractable at small scale; not free at large scale.
+- **Synthetic 4 (NQ suppression).** Different shape of the same
+  friction: comparing two intervals (proposal.duration vs
+  window.duration) requires a pre-computed boolean fact
+  (`duration_within_window`). The adapter does the arithmetic; the
+  verifier checks the result for equality. The IR is deliberately
+  arithmetic-free.
 
 **Question.** Is per-grant rule duplication acceptable indefinitely, or
 should the IR grow some form of variable binding / atom-pair comparison?

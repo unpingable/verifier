@@ -370,3 +370,134 @@ def test_llm_claim_human_review_unlocks_durable():
     # The actionable basis fired and held.
     basis_dv = verdict.dimension_verdicts["basis"]
     assert basis_dv.status == "passed"
+
+
+# ==================================================================
+# Workflow 4: NQ alert suppression / maintenance gate
+# ==================================================================
+#
+# Domain: an operator wants to suppress an active NQ finding during a
+# maintenance window.  Pure constraint check (no basis dimension), but
+# operationally rich: high-severity suppression requires window + ack +
+# witness coverage + duration-within-window.  Each gate stems from a
+# different system (calendar / nightshift / nq-witness / adapter).
+#
+# Operationally this is the keeper line for maintenance discipline:
+# "maintenance is not incident resolution, and suppression is not
+# disappearance."
+#
+# Adapter sweat — what didn't translate cleanly:
+#
+# 1. C-1 fourth signal.  Chatty's proposal had {action, finding,
+#    duration, reason}.  We mapped finding→target, kept action, invented
+#    actor=nightshift-operator, set scope="ops", and pushed both
+#    duration_hours and reason into facts on subject="proposal".  Same
+#    pattern as prior workflows.  Four workflows, same friction.
+#
+# 2. C-2 in a new shape: interval comparison.  The natural rule is
+#    "suppression duration must not exceed maintenance window" — that
+#    requires comparing two values (proposal.duration vs
+#    window.duration), which the IR does not support.  Workaround: the
+#    adapter pre-computes a boolean fact `proposal.duration_within_window`
+#    and the rule checks that fact for equality with true.  Works, but
+#    the adapter is doing arithmetic the verifier deliberately can't.
+#    This is a different shape of C-2 friction than the per-grant rule
+#    duplication seen in W1 — both are downstream consequences of "no
+#    atom-pair comparison."
+#
+# 3. Multi-source provenance is doing real work (positive).  Facts here
+#    come from nq, calendar, nightshift, nq-witness, adapter, and
+#    proposal — six sources.  The verifier doesn't care; `source` is
+#    free-form.  This is operationally honest: in the real world, an
+#    admissibility check pulls from many systems, and the verifier's
+#    job is to compose them, not to know them.
+#
+# 4. `op: in` over enumerated values is more readable than `op: neq`.
+#    For the witness rule — "coverage must be in {complete, partial}" —
+#    is clearer than "coverage must not equal cannot_testify".  The
+#    `in` form scales as the witness vocabulary grows; `neq` would not.
+#    Minor positive signal for the operator vocabulary.
+#
+# 5. Actor weirdness is *less* sweaty here than W3.  The accountable
+#    initiator is clearly the operator triggering the suppression —
+#    one role, no ambiguity.  This domain has a clean actor concept.
+#    Different domains stretch C-5 differently; some don't stretch it
+#    at all.
+
+NQ_SUPPRESSION_CASES = [
+    ("nq_suppression_gate/allowed_clean_suppression.json",      "allowed"),
+    ("nq_suppression_gate/denied_no_maintenance_window.json",   "denied"),
+    ("nq_suppression_gate/denied_witness_cannot_testify.json",  "denied"),
+    ("nq_suppression_gate/denied_duration_exceeds_window.json", "denied"),
+]
+
+
+@pytest.mark.parametrize("fixture,expected", NQ_SUPPRESSION_CASES)
+def test_nq_suppression_workflow(fixture, expected):
+    verdict = run_payload(_load(fixture))
+    assert verdict.status == expected, (
+        f"{fixture}: expected {expected}, got {verdict.status}"
+    )
+
+
+def test_nq_suppression_witness_block_uses_in_operator():
+    """The witness rule uses `op: in` over enumerated allowed values
+    rather than `op: neq` against a forbidden one.  Verifies the verdict
+    correctly attributes the failure to the witness rule when coverage
+    is `cannot_testify`."""
+    verdict = run_payload(_load("nq_suppression_gate/denied_witness_cannot_testify.json"))
+
+    assert verdict.status == "denied"
+    failed_ids = {r.rule_id for r in verdict.failed_rules}
+    assert "nq.witness_coverage_must_allow" in failed_ids
+    # Other rules should NOT fail — only witness is the problem here.
+    assert failed_ids == {"nq.witness_coverage_must_allow"}
+
+
+def test_nq_suppression_duration_uses_precomputed_fact():
+    """Interval comparison (proposal.duration vs window.duration) is
+    not expressible in the IR — the adapter must pre-compute a boolean
+    fact `duration_within_window`.  The rule then checks that fact for
+    eq=true.  This pins the C-2 workaround pattern: when the IR can't
+    compare, the adapter does the math and exposes the result."""
+    verdict = run_payload(_load("nq_suppression_gate/denied_duration_exceeds_window.json"))
+
+    assert verdict.status == "denied"
+    failed_ids = {r.rule_id for r in verdict.failed_rules}
+    assert "nq.duration_within_window" in failed_ids
+    # The duration_within_window fact is the pre-computed signal.
+    duration_facts = [
+        f for f in verdict.used_facts
+        if f.field == "duration_within_window"
+    ]
+    assert len(duration_facts) == 1
+    assert duration_facts[0].value is False
+
+
+def test_nq_suppression_severity_gating_works():
+    """Severity-conditional rules (when severity=high) fire on this
+    high-severity finding.  In the no-window case, only the
+    high-severity-requires-maintenance rule fails — confirming the
+    when-clause is gating correctly and the rule is doing the
+    severity-conditional work."""
+    verdict = run_payload(_load("nq_suppression_gate/denied_no_maintenance_window.json"))
+
+    assert verdict.status == "denied"
+    failed_ids = {r.rule_id for r in verdict.failed_rules}
+    assert "nq.high_severity_requires_maintenance" in failed_ids
+    # Operator ack rule was satisfied (ack exists), so it should NOT
+    # be in failed_rules.
+    assert "nq.high_severity_requires_operator_ack" not in failed_ids
+
+
+def test_nq_suppression_no_basis_falls_through_like_release_gate():
+    """W4 is a pure constraint workflow — no basis rules submitted.
+    The verdict mechanism falls through to allowed/denied via failure
+    counting alone.  This is the same path as W2; together they prove
+    pure constraint workflows are first-class, not second-class."""
+    verdict = run_payload(_load("nq_suppression_gate/allowed_clean_suppression.json"))
+
+    assert verdict.status == "allowed"
+    # No basis dimension — basis isn't in the dimension_verdicts dict.
+    assert "basis" not in verdict.dimension_verdicts
+    assert verdict.dimension_verdicts["constraint"].status == "passed"

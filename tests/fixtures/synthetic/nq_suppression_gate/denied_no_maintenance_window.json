@@ -1,0 +1,64 @@
+{
+  "proposal": {
+    "action": "suppress_finding",
+    "actor": "nightshift-operator",
+    "target": "zfs.pool.degraded",
+    "scope": "ops"
+  },
+  "facts": [
+    {"subject": "proposal", "field": "duration_hours", "value": 6, "source": "proposal"},
+    {"subject": "proposal", "field": "duration_within_window", "value": true, "source": "adapter"},
+    {"subject": "proposal", "field": "reason", "value": "maintenance", "source": "proposal"},
+    {"subject": "target", "field": "state", "value": "active", "source": "nq"},
+    {"subject": "target", "field": "severity", "value": "high", "source": "nq"},
+    {"subject": "maintenance_window", "field": "active", "value": false, "source": "calendar"},
+    {"subject": "operator_ack", "field": "exists", "value": true, "source": "nightshift"},
+    {"subject": "witness", "field": "coverage", "value": "complete", "source": "nq-witness"}
+  ],
+  "rules": [
+    {
+      "rule_id": "nq.high_severity_requires_maintenance",
+      "description": "High-severity suppression requires an active maintenance window",
+      "kind": "constraint",
+      "when": [
+        {"subject": "target", "field": "severity", "op": "eq", "value": "high"}
+      ],
+      "require": [
+        {"subject": "maintenance_window", "field": "active", "op": "eq", "value": true}
+      ]
+    },
+    {
+      "rule_id": "nq.high_severity_requires_operator_ack",
+      "description": "High-severity suppression requires operator acknowledgement",
+      "kind": "constraint",
+      "when": [
+        {"subject": "target", "field": "severity", "op": "eq", "value": "high"}
+      ],
+      "require": [
+        {"subject": "operator_ack", "field": "exists", "op": "eq", "value": true}
+      ]
+    },
+    {
+      "rule_id": "nq.witness_coverage_must_allow",
+      "description": "Suppression cannot proceed if witness cannot testify",
+      "kind": "constraint",
+      "when": [
+        {"subject": "proposal", "field": "action", "op": "eq", "value": "suppress_finding"}
+      ],
+      "require": [
+        {"subject": "witness", "field": "coverage", "op": "in", "value": ["complete", "partial"]}
+      ]
+    },
+    {
+      "rule_id": "nq.duration_within_window",
+      "description": "Suppression duration must not exceed maintenance window",
+      "kind": "constraint",
+      "when": [
+        {"subject": "proposal", "field": "action", "op": "eq", "value": "suppress_finding"}
+      ],
+      "require": [
+        {"subject": "proposal", "field": "duration_within_window", "op": "eq", "value": true}
+      ]
+    }
+  ]
+}
