@@ -1,0 +1,48 @@
+{
+  "proposal": {
+    "action": "tag_release",
+    "actor": "release-pipeline",
+    "target": "verifier",
+    "scope": "0.2.0"
+  },
+  "facts": [
+    {"subject": "tests", "field": "pass", "value": true, "source": "ci"},
+    {"subject": "parity", "field": "pass", "value": true, "source": "ci"},
+    {"subject": "readme", "field": "current", "value": true, "source": "review"},
+    {"subject": "git", "field": "uncommitted_changes", "value": false, "source": "git"}
+  ],
+  "rules": [
+    {
+      "rule_id": "release.tests_pass",
+      "description": "Release requires passing tests",
+      "kind": "constraint",
+      "require": [
+        {"subject": "tests", "field": "pass", "op": "eq", "value": true}
+      ]
+    },
+    {
+      "rule_id": "release.cross_surface_parity",
+      "description": "Release requires cross-surface parity",
+      "kind": "constraint",
+      "require": [
+        {"subject": "parity", "field": "pass", "op": "eq", "value": true}
+      ]
+    },
+    {
+      "rule_id": "release.readme_current",
+      "description": "Release requires README/API agreement",
+      "kind": "constraint",
+      "require": [
+        {"subject": "readme", "field": "current", "op": "eq", "value": true}
+      ]
+    },
+    {
+      "rule_id": "release.clean_tree",
+      "description": "Release requires no uncommitted changes",
+      "kind": "constraint",
+      "require": [
+        {"subject": "git", "field": "uncommitted_changes", "op": "eq", "value": false}
+      ]
+    }
+  ]
+}

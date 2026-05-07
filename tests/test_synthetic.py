@@ -139,3 +139,102 @@ def test_standing_grant_advisory_does_not_fail_anything():
     assert verdict.status == "advisory"
     assert verdict.failed_rules == []
     assert verdict.warnings == []
+
+
+# ==================================================================
+# Workflow 2: Release / merge gate
+# ==================================================================
+#
+# Domain: a CI pipeline asks whether a repo is eligible to be tagged.
+# Pure deny-rule constraint check: tests pass, cross-surface parity
+# holds, README current, working tree clean.  No basis dimension at all.
+# This is intentionally mundane — chatty's framing was "a nice antidote
+# to formal methods as ceremonial robe."
+#
+# Adapter sweat — what didn't translate cleanly:
+#
+# 1. Proposal struct shape, again (stronger signal for C-1).  Chatty's
+#    example had {action, repo, version}; Standing's had
+#    {action, actor, target, effect}; ours is fixed at
+#    {action, actor, target, scope}.  Each domain wants different
+#    fields.  Here we mapped repo→target and version→scope, which
+#    *works* but stretches the words "target" and "scope" past the
+#    point where they pull their weight.  This is now two workflows
+#    pointing at the same friction.
+#
+# 2. The actor is invented.  Chatty's release proposal had no actor —
+#    "tag a release" is more of an event than a directed action.  Our
+#    Proposal.actor is required (min_length=1), so we put
+#    "release-pipeline" in.  This is real friction: not every
+#    admissibility check has a meaningful actor.  Recorded as C-5.
+#
+# 3. Verdict triad fall-through works.  No basis rules submitted →
+#    `_aggregate_status` takes the "no basis dimension in play" branch
+#    and returns "allowed" when no deny rules fail.  Pure constraint
+#    workflows do not feel forced to have a basis.  Positive signal.
+#
+# 4. Subjects expanded naturally.  We used subject ∈ {tests, parity,
+#    readme, git} for these facts, which goes beyond the
+#    actor/target/proposal trio that the existing tests use.  The
+#    schema already permits this — `subject` is a non-empty string —
+#    but the docstring example list ("actor", "target", "proposal",
+#    "system", "policy") may want extending to acknowledge that
+#    subjects are an open vocabulary.  Minor.
+
+RELEASE_GATE_CASES = [
+    ("release_merge_gate/allowed_clean_release.json",       "allowed"),
+    ("release_merge_gate/denied_failing_tests.json",        "denied"),
+    ("release_merge_gate/denied_dirty_tree.json",           "denied"),
+    ("release_merge_gate/denied_multiple_gates_fail.json",  "denied"),
+]
+
+
+@pytest.mark.parametrize("fixture,expected", RELEASE_GATE_CASES)
+def test_release_gate_workflow(fixture, expected):
+    verdict = run_payload(_load(fixture))
+    assert verdict.status == expected, (
+        f"{fixture}: expected {expected}, got {verdict.status}"
+    )
+
+
+def test_release_gate_no_basis_rules_falls_through_to_allowed():
+    """When all four constraint rules pass and there are no basis rules
+    in the input, the verdict is 'allowed' via the fall-through branch
+    of _aggregate_status.  This pins the legacy-compat path: pure
+    constraint workflows do not need to invent a basis."""
+    verdict = run_payload(_load("release_merge_gate/allowed_clean_release.json"))
+
+    assert verdict.status == "allowed"
+    # No basis rules submitted, so basis dimension does not appear.
+    assert "basis" not in verdict.dimension_verdicts
+    # Constraint dimension passed cleanly.
+    assert verdict.dimension_verdicts["constraint"].status == "passed"
+
+
+def test_release_gate_multiple_failures_all_reported():
+    """Two gates fail (tests + parity) plus the dirty tree.  All three
+    should appear in failed_rules — the verifier reports every failing
+    rule, not a minimal subset.  This is the design property that lets
+    the consumer see the full picture in one round-trip."""
+    verdict = run_payload(_load("release_merge_gate/denied_multiple_gates_fail.json"))
+
+    assert verdict.status == "denied"
+    failed_ids = {r.rule_id for r in verdict.failed_rules}
+    assert "release.tests_pass" in failed_ids
+    assert "release.cross_surface_parity" in failed_ids
+    assert "release.clean_tree" in failed_ids
+    # readme.current = true, so that rule should NOT be in failed_rules.
+    assert "release.readme_current" not in failed_ids
+
+
+def test_release_gate_dimension_says_failed_not_missing():
+    """Failure mode here is evidence-against (tests.pass=false, not
+    absent), so the constraint dimension should report 'failed' rather
+    than 'missing'.  This validates that the missing-vs-failed
+    distinction in DimensionVerdict actually means what it says."""
+    verdict = run_payload(_load("release_merge_gate/denied_failing_tests.json"))
+
+    dv = verdict.dimension_verdicts["constraint"]
+    assert dv.status == "failed", (
+        f"expected 'failed' (evidence against tests.pass), got {dv.status!r}"
+    )

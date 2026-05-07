@@ -17,19 +17,22 @@ here.
 **Current.** `Proposal = {action, actor, target, scope}` — fixed at four
 fields.
 
-**Surfaced by.** Synthetic 1 (Standing grant check). The example workflow
-needed an `effect` dimension on the proposal (e.g.
-`effect=edit_candidate`). We encoded it as a
-`Fact(subject="proposal", field="effect")`. This works because the verifier
-grounds `proposal.*` keys regardless of source — but it splits
-proposal-shaped data across two channels, half struct, half fact list.
+**Surfaced by.**
+- **Synthetic 1 (Standing grant check).** Workflow needed an `effect`
+  dimension; encoded as `Fact(subject="proposal", field="effect")`. Splits
+  proposal-shaped data across two channels.
+- **Synthetic 2 (Release/merge gate).** Workflow's natural shape is
+  `{action, repo, version}`. We mapped repo→target and version→scope,
+  which works but stretches both words past the point where they pull
+  their weight.
 
 **Question.** Should `Proposal` grow extension fields (or a `dimensions`
 map), or should all proposal-shaped data except action/actor/target live
-in facts?
+in facts? Two workflows now point at the same friction with different
+extension shapes (`effect` vs `repo`+`version`).
 
-**Status.** Open. Do not act yet — single workflow signal. Re-evaluate
-after workflows 2–4.
+**Status.** Open, signal strengthening. Two workflows in. Re-evaluate
+after workflows 3–4.
 
 ---
 
@@ -82,3 +85,38 @@ expired fields).
 
 **Status.** Working as intended. Recorded as a positive data point for
 future workflows; no follow-up.
+
+---
+
+## C-5: Required actor on Proposal
+
+**Current.** `Proposal.actor` is required (Pydantic `min_length=1`).
+
+**Surfaced by.** Synthetic 2 (Release/merge gate). Chatty's release
+proposal had no actor — "tag a release" is more an event than a directed
+action. We invented `actor="release-pipeline"` to satisfy the schema, but
+the value carries no semantic weight in any of the rules.
+
+**Question.** Should `Proposal.actor` be optional, or is the verifier
+right to insist that every proposal name a responsible party (even if
+synthetic)?
+
+**Status.** Open. Lean: actor-as-required is probably correct for an
+admissibility checker — it keeps the audit chain whole — but worth
+revisiting after the LLM-claim and NQ workflows surface their own
+actor-shape preferences.
+
+---
+
+## C-6: Open subject vocabulary (positive signal)
+
+**Current.** `Fact.subject` is a non-empty string. The docstring lists
+`actor / target / proposal / system / policy` as examples but does not
+constrain.
+
+**Surfaced by.** Synthetic 2 used subjects `tests / parity / readme / git`
+without friction. The schema accommodated naturally.
+
+**Status.** Working as intended. Minor: the docstring example list could
+be expanded to make clear that subjects are an open vocabulary. No
+behavior change required.
