@@ -37,7 +37,7 @@ pytest tests/ -v
 
 ## Project Structure
 
-- `models.py` — typed IR: Proposal, Fact (`claim_state`), ConstraintRule (`kind`, `basis_effect`), Verdict (triad + dimension_verdicts + stale_facts), MissingFact, StaleFact
+- `models.py` — typed IR: Proposal (core spine + `attributes` for domain extension data), Fact (`claim_state`), ConstraintRule (`kind`, `basis_effect`), Verdict (triad + dimension_verdicts + stale_facts), MissingFact, StaleFact
 - `compiler.py` — compiles models into Z3 (has_fact + field_val predicates, tracked assertions)
 - `verifier.py` — per-rule checking with closed-world assumption, claim_state pre-gate, dimension projection, advisory aggregation
 - `runner.py` — single dispatch (`run_payload`) shared by library, CLI, and MCP
@@ -72,3 +72,5 @@ pytest tests/ -v
 - Don't repurpose `severity: warn` as advisory — they're different animals. Warning means "this rule did not block." Advisory means "this basis can be heard but cannot support action." Use `kind="basis"` + `basis_effect="advisory"`.
 - Don't globally scan for stale facts — the claim_state pre-gate is scoped to facts referenced by a rule. Spooky-action-at-a-distance diagnostics are worse than no diagnostic.
 - Don't fold `invalid_input` into the admissibility triad — it's a schema/transport failure, not a verdict on the proposal.
+- Don't shadow core proposal fields (action/actor/target/scope) via `Proposal.attributes`. Attributes are for domain extension data (effect, version, duration, …); the core spine is the audit grammar.
+- Don't dump external evidence into `Proposal.attributes`. Attributes are *proposed intent*; `Fact` is *external evidence*. Preserving the distinction is what keeps rules honest about what came from whom.

@@ -3,10 +3,12 @@
     "action": "promote_claim",
     "actor": "claude-opus-4.7",
     "target": "docs/ARCHITECTURE_NOTES.md",
-    "scope": "claim_promotion"
+    "scope": "claim_promotion",
+    "attributes": {
+      "effect": "durable_doctrine"
+    }
   },
   "facts": [
-    {"subject": "proposal", "field": "effect", "value": "durable_doctrine", "source": "proposal"},
     {"subject": "claim", "field": "id", "value": "claim.ai_substrate_authority_capture", "source": "chat"},
     {"subject": "claim", "field": "source", "value": "llm_session", "source": "chat"},
     {"subject": "claim", "field": "independent_receipt", "value": true, "source": "operator-vouch"}

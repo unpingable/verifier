@@ -58,6 +58,19 @@ class TestProposalContract:
         p = Proposal(action="deploy", actor="bot", target="api", scope="prod")
         assert p.action == "deploy"
 
+    def test_attributes_default_empty(self):
+        p = Proposal(action="a", actor="b", target="c", scope="d")
+        assert p.attributes == {}
+
+    def test_attributes_accept_str_int_bool(self):
+        p = Proposal(
+            action="a", actor="b", target="c", scope="d",
+            attributes={"effect": "edit_candidate", "duration_hours": 6, "approved": True},
+        )
+        assert p.attributes["effect"] == "edit_candidate"
+        assert p.attributes["duration_hours"] == 6
+        assert p.attributes["approved"] is True
+
 
 class TestFactContract:
     def test_requires_source(self):

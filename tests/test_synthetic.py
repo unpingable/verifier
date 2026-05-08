@@ -16,6 +16,14 @@ Friction observed during translation is recorded in the docstring of
 each workflow's section below.  Friction is data — when the same
 friction shows up across three workflows, that's a signal.  When it
 shows up in one and one only, it's a local quirk.
+
+Note on C-1 resolution: the friction commentary in the per-workflow
+sections below describes the pre-C-1 state (proposal-shaped data being
+forced into facts on subject="proposal").  The current fixtures use
+`Proposal.attributes` as introduced in schema 0.3.0, which resolved
+that wound.  The historical narrative is preserved because the wind
+tunnel produced its finding *because* of that friction — rewriting the
+notes would erase the evidence trail.
 """
 
 from __future__ import annotations
@@ -454,24 +462,30 @@ def test_nq_suppression_witness_block_uses_in_operator():
     assert failed_ids == {"nq.witness_coverage_must_allow"}
 
 
-def test_nq_suppression_duration_uses_precomputed_fact():
+def test_nq_suppression_duration_uses_precomputed_attribute():
     """Interval comparison (proposal.duration vs window.duration) is
     not expressible in the IR — the adapter must pre-compute a boolean
-    fact `duration_within_window`.  The rule then checks that fact for
-    eq=true.  This pins the C-2 workaround pattern: when the IR can't
-    compare, the adapter does the math and exposes the result."""
-    verdict = run_payload(_load("nq_suppression_gate/denied_duration_exceeds_window.json"))
+    `duration_within_window` and expose it on `proposal.attributes`.
+    The rule then checks that attribute for eq=true.  This pins the C-2
+    workaround pattern: when the IR can't compare, the adapter does the
+    math and exposes the result on the proposal envelope.
 
+    Post-C-1: pre-computed proposal-shaped data lives in attributes,
+    not in the facts list.  Facts remain the channel for *external
+    evidence*; attributes are *proposed intent*."""
+    payload = _load("nq_suppression_gate/denied_duration_exceeds_window.json")
+    assert payload["proposal"]["attributes"]["duration_within_window"] is False
+
+    verdict = run_payload(payload)
     assert verdict.status == "denied"
     failed_ids = {r.rule_id for r in verdict.failed_rules}
     assert "nq.duration_within_window" in failed_ids
-    # The duration_within_window fact is the pre-computed signal.
-    duration_facts = [
-        f for f in verdict.used_facts
-        if f.field == "duration_within_window"
-    ]
-    assert len(duration_facts) == 1
-    assert duration_facts[0].value is False
+
+    # Pre-computed values live in proposal.attributes, NOT in facts.
+    # used_facts is for external evidence; attributes are proposed intent.
+    assert all(f.subject != "proposal" for f in verdict.used_facts), (
+        "post-C-1: no fact should have subject='proposal' for proposal-shaped data"
+    )
 
 
 def test_nq_suppression_severity_gating_works():

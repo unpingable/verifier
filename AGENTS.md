@@ -52,8 +52,9 @@ logic in the CLI or MCP server; add to `runner.py` instead.
 
 ```
 verifier/
-├── models.py          # Typed IR: Proposal, Fact (claim_state), ConstraintRule
-│                      #   (kind, basis_effect), Verdict (triad +
+├── models.py          # Typed IR: Proposal (core spine + attributes),
+│                      #   Fact (claim_state), ConstraintRule (kind,
+│                      #   basis_effect), Verdict (triad +
 │                      #   dimension_verdicts + stale_facts)
 ├── compiler.py        # models → Z3 (has_fact + field_val predicates)
 ├── verifier.py        # Per-rule checking, closed-world, claim_state pre-gate,
@@ -73,6 +74,8 @@ verifier/
 │   ├── test_dimensions.py        # Per-kind verdict projection
 │   ├── test_advisory.py          # Verdict triad + basis_effect validation
 │   ├── test_claim_state.py       # Stale/revoked/expired pre-gate
+│   ├── test_attributes.py        # Proposal.attributes grounding pipeline
+│   ├── test_synthetic.py         # Wind-tunnel workflows (4 domains)
 │   ├── test_properties.py        # Permutation invariance + determinism
 │   ├── test_scope_verifier.py    # Slice 0 basics
 │   └── test_practical.py         # Concrete "does it have hands" suite

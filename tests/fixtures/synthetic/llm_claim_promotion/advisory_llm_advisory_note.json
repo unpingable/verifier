@@ -3,10 +3,12 @@
     "action": "promote_claim",
     "actor": "operator-1",
     "target": "docs/CANDIDATES.md",
-    "scope": "claim_promotion"
+    "scope": "claim_promotion",
+    "attributes": {
+      "effect": "advisory_note"
+    }
   },
   "facts": [
-    {"subject": "proposal", "field": "effect", "value": "advisory_note", "source": "proposal"},
     {"subject": "claim", "field": "id", "value": "claim.ai_substrate_authority_capture", "source": "chat"},
     {"subject": "claim", "field": "source", "value": "llm_session", "source": "chat"},
     {"subject": "claim", "field": "independent_receipt", "value": false, "source": "none"}

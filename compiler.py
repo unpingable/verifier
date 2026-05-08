@@ -140,16 +140,29 @@ def compile_rule_into(solver: Solver, rule: ConstraintRule) -> None:
 # ------------------------------------------------------------------
 
 def compile_proposal(proposal: Proposal) -> list:
-    """Return Z3 assertions that ground the proposal fields (value + presence)."""
+    """Return Z3 assertions that ground the proposal fields (value + presence).
+
+    Grounds the four core fields (action, actor, target, scope) plus any
+    domain-specific entries in `proposal.attributes`.  Attributes appear
+    in the solver under `(proposal, <key>)` so rule atoms can reference
+    them the same way they reference the core fields.
+    """
     assertions = []
+    subj = StringVal("proposal")
+
     for field, value in [
         ("action", proposal.action),
         ("actor", proposal.actor),
         ("target", proposal.target),
         ("scope", proposal.scope),
     ]:
-        subj = StringVal("proposal")
         fld = StringVal(field)
         assertions.append(_has_fact(subj, fld) == BoolVal(True))
         assertions.append(_field_val(subj, fld) == StringVal(value))
+
+    for key, value in proposal.attributes.items():
+        fld = StringVal(key)
+        assertions.append(_has_fact(subj, fld) == BoolVal(True))
+        assertions.append(_field_val(subj, fld) == StringVal(_normalize(value)))
+
     return assertions

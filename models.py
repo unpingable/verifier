@@ -17,7 +17,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-SCHEMA_VERSION = "0.2.0"
+SCHEMA_VERSION = "0.3.0"
 
 RuleKind = Literal["basis", "precedence", "standing", "constraint"]
 
@@ -33,12 +33,36 @@ ClaimState = Literal["current", "stale", "revoked", "expired"]
 class Proposal(BaseModel):
     """An action request under evaluation.
 
-    All fields are required and non-empty.
+    Field roles:
+    - action: the verb being proposed (e.g. "deploy", "promote_claim",
+      "tag_release", "suppress_finding"). Required, non-empty.
+    - actor:  accountable initiator / system submitting the proposal.
+      Not necessarily a human, not necessarily the metaphysical agent
+      of causation — just the named party standing behind the request.
+      Required, non-empty: every proposal names someone.
+    - target: the thing being acted upon. Required, non-empty.
+    - scope:  the operating scope of the action. Required, non-empty.
+    - attributes: domain-specific extension data. Free-form key/value
+      map for proposal-shaped fields that don't fit the audit-spine
+      core (action/actor/target/scope). Examples: effect, version,
+      duration, reason, repo. Keys appear as `(subject="proposal",
+      field=<key>)` in the grounded set, so rule atoms can reference
+      them the same way they reference the core fields.
+
+      **Do not** use attributes to shadow core field names — putting
+      `"action": ...` in attributes is a footgun that produces
+      contradictory solver state. Keep the audit spine in the struct.
+
+      **Do not** dump observed external evidence into attributes —
+      that's what `Fact` is for. Attributes are *proposed intent*;
+      facts are *external evidence*. Preserve the distinction so
+      rules can refer to both without losing track of which is which.
     """
     action: str = Field(..., min_length=1)
     actor: str = Field(..., min_length=1)
     target: str = Field(..., min_length=1)
     scope: str = Field(..., min_length=1)
+    attributes: dict[str, str | int | bool] = {}
 
 
 class Fact(BaseModel):

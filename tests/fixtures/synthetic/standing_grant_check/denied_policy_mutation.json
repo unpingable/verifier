@@ -3,7 +3,10 @@
     "action": "edit_file",
     "actor": "claude-code",
     "target": "agent_gov/docs/SPEC.md",
-    "scope": "agent_gov/docs"
+    "scope": "agent_gov/docs",
+    "attributes": {
+      "effect": "policy_mutation"
+    }
   },
   "facts": [
     {
@@ -26,12 +29,6 @@
       "value": "edit_candidate",
       "source": "standing:grant-123",
       "claim_state": "current"
-    },
-    {
-      "subject": "proposal",
-      "field": "effect",
-      "value": "policy_mutation",
-      "source": "proposal"
     }
   ],
   "rules": [

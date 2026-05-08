@@ -10,22 +10,23 @@ When a candidate is resolved (built or rejected), migrate the conclusion
 into CLAUDE.md / AGENTS.md / README.md as appropriate and remove the entry
 here.
 
-## Read of the register after Synthetic Workflows 1–4
+## Read of the register after Synthetic Workflows 1–4 + C-1 patch
 
 The verifier has now survived four semantically different synthetic
 domains — Standing grant (authority/lifecycle), release gate (mundane
 constraint checklist), LLM claim promotion (basis/advisory/durable
-boundary), NQ suppression (operationally rich gate) — without schema
-change. The substrate property holds:
+boundary), NQ suppression (operationally rich gate). All friction
+concentrated on Proposal shape (C-1). The substrate property holds:
 
 > *The verifier can express verdict structure without owning domain truth.*
 
-Current read on the register, post-W4:
+Current read on the register:
 
-- **C-1 (Proposal shape).** Hard signal across **four workflows** with
-  four different "natural" extension shapes (`effect`, `repo+version`,
-  `effect`, `duration+reason`). `Proposal` is carrying too much
-  domain-specific shape in a fixed four-field coat. **Actionable now.**
+- **C-1 (Proposal shape).** **Resolved in schema 0.3.0.** Added
+  `Proposal.attributes: dict[str, str | int | bool]` for
+  domain-specific extension data; core spine (action/actor/target/scope)
+  preserved as the audit grammar. All synthetic fixtures migrated;
+  no rule changes needed. Migrated to "Resolved" section below.
 - **C-2 (No variable binding).** Real, but **dangerous**. Two friction
   shapes seen so far: per-grant rule duplication (W1) and pre-computed
   boolean facts for interval comparison (W4). Both workarounds work.
@@ -34,11 +35,11 @@ Current read on the register, post-W4:
 - **C-3 (`scope` collision).** Standing-side terminology debt. Out of
   scope for verifier.
 - **C-4 (`claim_state` pre-gate).** Working. Positive signal.
-- **C-5 (Required actor).** Keep required. Friction varies by domain:
-  W2 (no natural actor), W3 (multi-role ambiguity), W4 (clean single
-  actor). The friction is shape, not optionality. Likely
-  rename / redefine — candidates: `accountable_subject`, `initiator`,
-  `claimant`, `authority_candidate`. Depends on altitude.
+- **C-5 (Required actor).** Doctrine partially landed: actor docstring
+  in models.py now defines actor as "accountable initiator / system
+  submitting the proposal." Optional rename (to `accountable_subject`
+  etc.) deferred — the docstring clarification absorbed the W2/W3/W4
+  friction without renaming. Open as a deferred-rename candidate.
 - **C-6 (Open subject vocabulary).** Working. W2 used tests/parity/etc;
   W4 used maintenance_window/operator_ack/witness/etc. The schema
   accommodates naturally.
@@ -48,67 +49,39 @@ Current read on the register, post-W4:
   independent workflows now (W2 release gate, W4 NQ suppression). Pure
   constraint workflows are first-class.
 
-**The wind tunnel exercise's core finding:** four workflows with
-unrelated semantic temperatures all compiled into the same IR, with
-all friction concentrated on **C-1 (Proposal shape)**. That is now
-the load-bearing question.
+**Wind tunnel verdict:** the IR survived four unrelated semantic
+temperatures, the one load-bearing wound (C-1) was diagnosed precisely
+and patched without redesigning rules, dimensions, arithmetic, or
+actor semantics. Restraint paid rent.
 
 ---
 
-## C-1: Proposal struct shape
+## C-1: Proposal struct shape (RESOLVED — schema 0.3.0)
 
-**Current.** `Proposal = {action, actor, target, scope}` — fixed at four
-fields.
+**Resolution.** Added `Proposal.attributes: dict[str, str | int | bool]`
+in schema 0.3.0. Domain-specific extension data lives in attributes;
+the four-field audit spine (action/actor/target/scope) stays put.
+Attribute keys appear in the grounded set as `(proposal, key)` so rule
+atoms reference them the same way they reference core fields.
 
-**Surfaced by.**
-- **Synthetic 1 (Standing grant check).** Workflow needed an `effect`
-  dimension; encoded as `Fact(subject="proposal", field="effect")`. Splits
-  proposal-shaped data across two channels.
-- **Synthetic 2 (Release/merge gate).** Workflow's natural shape is
-  `{action, repo, version}`. We mapped repo→target and version→scope,
-  which works but stretches both words past the point where they pull
-  their weight.
-- **Synthetic 3 (LLM claim promotion).** Workflow's natural shape
-  again carries an `effect` dimension (`durable_doctrine` vs
-  `advisory_note`). Same encoding, same friction. Three workflows now
-  pointing at the same shape question.
-- **Synthetic 4 (NQ suppression).** Workflow's natural shape is
-  `{action, finding, duration, reason}`. We mapped finding→target,
-  invented actor=nightshift-operator, set scope="ops", and pushed
-  duration_hours and reason into facts on subject="proposal".
-  Fourth domain, fourth different extension shape, same workaround.
+**Boundary preserved.** Attributes are *proposed intent*. Facts remain
+*external evidence*. Rules can refer to both, but the channels do not
+collapse into each other.
 
-**Question.** Should `Proposal` grow extension fields (or a `dimensions`
-map), or should all proposal-shaped data except action/actor/target live
-in facts? Four workflows in, four different extension shapes
-(`effect`, `repo`+`version`, `effect`, `duration`+`reason`).
+**Migration outcome.** All four synthetic workflows (W1 Standing, W3
+LLM claim promotion, W4 NQ suppression) migrated to use attributes
+instead of `Fact(subject="proposal", field=...)`. No rule changes
+needed. W2 (release gate) had no proposal-shaped facts to migrate.
 
-**Status.** **Actionable.** Four workflows in a row sweat the same
-friction — that's no longer signal collection, it's a definite shape.
-The wind tunnel exercise has produced its finding. Awaiting design
-review for resolution direction (see directional lean below).
-
-**Directional lean (recorded for future review, not authorization to
-build).** When this resolves, the likely move is **not** "add specific
-fields like effect / repo / version" — that way lies taxonomy goblin.
-More likely shape:
-
-```
-Proposal = {
-  action,
-  actor,
-  target,
-  context: map | string | object
-}
-```
-
-or:
-
-```
-Proposal.core + Proposal.attributes
-```
-
-Wait until workflows 3–4 sweat before reaching for the wrench.
+**Historical context (preserved as evidence trail).** The friction was
+diagnosed across four workflows with four different "natural"
+extension shapes — `effect` (W1, W3), `repo+version` (W2, partial),
+`duration+reason` (W4). Forcing them into facts on `subject="proposal"`
+collapsed the proposal-intent vs external-evidence channels. The
+wind-tunnel exercise specifically existed to surface this friction
+before patching it; the patch was minimum-scope (one new field, one
+default-empty dict) and did not touch rules / dimensions / arithmetic
+/ actor semantics.
 
 ---
 
@@ -198,25 +171,24 @@ future workflows; no follow-up.
 right to insist that every proposal name a responsible party (even if
 synthetic)?
 
-**Status.** Open. Lean: actor-as-required is probably correct for an
-admissibility checker — it keeps the audit chain whole — but worth
-revisiting after the LLM-claim and NQ workflows surface their own
-actor-shape preferences.
+**Status.** Partially landed in schema 0.3.0. Actor remains required
+(min_length=1). The Proposal.actor docstring now defines the field as:
 
-**Directional lean (recorded for future review, not authorization to
-build).** Keep `actor` required. The issue likely is **not** "actor
-should be optional" — it may be that `actor` semantically means
-*accountable initiator* / *requesting system* / *authority claimant*
-and the field name is too narrow. Rename or reshape later if needed,
-but the audit-chain property of "every proposal names someone" is
-worth preserving even when the value is synthetic. If you can't name
-an accountable initiator, that's part of the finding.
+> *accountable initiator / system submitting the proposal. Not
+> necessarily a human, not necessarily the metaphysical agent of
+> causation — just the named party standing behind the request.*
 
-**Candidate names** when this resolves (none ratified): `actor` (current),
-`accountable_subject`, `initiator`, `claimant`, `authority_candidate`.
-The right name depends on altitude — the verifier sees one role but
-several upstream roles plausibly map to it. Decide which altitude the
-field is operating at before renaming.
+This absorbed the W2/W3/W4 friction without renaming. After the
+docstring landing, `actor="release-pipeline"` is no longer "fake to
+satisfy schema" — it's the correctly-named accountable initiator for
+that proposal.
+
+**Open as deferred-rename candidate.** Whether to rename the field to
+`accountable_subject`, `initiator`, `claimant`, or `authority_candidate`
+remains open. Not pursued in the C-1 patch — the docstring fix was
+the minimum-scope move, and a rename touches every adapter and rule
+that references `actor`. Defer until a workflow demonstrates the name
+is actively obstructive (rather than just historically narrow).
 
 ---
 

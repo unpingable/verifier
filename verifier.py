@@ -58,13 +58,19 @@ def _check_fact_consistency(facts: list[Fact]) -> list[FactContradiction]:
 
 
 def _grounded_keys(proposal: Proposal, facts: list[Fact]) -> set[tuple[str, str]]:
-    """Return the set of (subject, field) pairs grounded by the proposal and facts."""
+    """Return the set of (subject, field) pairs grounded by the proposal and facts.
+
+    Includes the four core proposal fields, every key in
+    `proposal.attributes`, and every (subject, field) pair from facts.
+    """
     keys = {
         ("proposal", "action"),
         ("proposal", "actor"),
         ("proposal", "target"),
         ("proposal", "scope"),
     }
+    for key in proposal.attributes:
+        keys.add(("proposal", key))
     for f in facts:
         keys.add((f.subject, f.field))
     return keys
@@ -116,6 +122,8 @@ def _rule_fires(
         ("proposal", "target"): proposal.target,
         ("proposal", "scope"): proposal.scope,
     }
+    for key, value in proposal.attributes.items():
+        fact_map[("proposal", key)] = value
     for f in facts:
         fact_map[(f.subject, f.field)] = f.value
 

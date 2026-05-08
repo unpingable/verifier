@@ -3,12 +3,14 @@
     "action": "suppress_finding",
     "actor": "nightshift-operator",
     "target": "zfs.pool.degraded",
-    "scope": "ops"
+    "scope": "ops",
+    "attributes": {
+      "duration_hours": 6,
+      "duration_within_window": true,
+      "reason": "maintenance"
+    }
   },
   "facts": [
-    {"subject": "proposal", "field": "duration_hours", "value": 6, "source": "proposal"},
-    {"subject": "proposal", "field": "duration_within_window", "value": true, "source": "adapter"},
-    {"subject": "proposal", "field": "reason", "value": "maintenance", "source": "proposal"},
     {"subject": "target", "field": "state", "value": "active", "source": "nq"},
     {"subject": "target", "field": "severity", "value": "high", "source": "nq"},
     {"subject": "maintenance_window", "field": "active", "value": true, "source": "calendar"},

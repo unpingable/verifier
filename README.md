@@ -84,6 +84,30 @@ Plus one **structural** status, which is not part of the admissibility triad:
 
 `authorized` is reserved for upstream authority kernels (e.g. the Lean Authority kernel). The verifier classifies admissibility; it does not authorize.
 
+### Proposal shape
+
+```
+Proposal = {
+  action:     str,           # the verb being proposed
+  actor:      str,           # accountable initiator / system submitting the proposal
+  target:     str,           # the thing being acted upon
+  scope:      str,           # the operating scope of the action
+  attributes: dict[str, str | int | bool],  # domain-specific extension data
+}
+```
+
+The four core fields are the **audit spine** — every proposal names
+someone trying to do something to something in some scope. `attributes`
+is where domain-specific shape goes (effect, version, duration, reason,
+repo, …) so adapters don't have to smuggle proposal-shaped data through
+`Fact(subject="proposal", field=...)`. Attribute keys appear in the
+grounded set as `(proposal, key)` so rule atoms reference them the same
+way they reference the core fields.
+
+The boundary that schema 0.3.0 protects: **attributes are proposed
+intent; facts are external evidence.** Rules can refer to both, but the
+two channels do not collapse into each other.
+
 ### Rule kinds
 
 Every `ConstraintRule` carries a `kind` (default `constraint`). The verifier groups rules by kind to produce per-dimension diagnostics in `Verdict.dimension_verdicts`:
