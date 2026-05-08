@@ -27,6 +27,35 @@ This is the substrate property. Confirmed across three semantically different sy
 6. `invalid_input` is a structural failure, not a member of the admissibility triad (`allowed | advisory | denied`)
 7. Verdict is a pure function of `{proposal, facts, rules}` — order of facts and rules does not affect the verdict
 
+## C-1 resolution principle
+
+> `Proposal.attributes` exists for **proposal-shaped domain extension data**.
+> `Fact` remains for **observed or externally supplied evidence**.
+> Rules may read both through the same grounding path, but
+> **authorship / provenance remains distinct**.
+
+This is the doctrine that the C-1 patch landed and that future changes
+must not blur. When it gets ergonomically convenient to stuff observed
+state into `Proposal.attributes` (because the proposal envelope is
+right there and you don't want to construct a `Fact` with a `source`
+and a `claim_state`), **don't**. The API convenience is the symptom
+that the boundary is being eroded.
+
+The wind tunnel surfaced C-1 because four domains all wanted to
+express *proposed intent* that wasn't part of the audit spine. They
+were not asking to express observed evidence in a more convenient
+way — those were already facts. Keep the channels separate:
+
+- **Proposal (and its attributes):** "I propose to do X with these
+  parameters." Authored by the requester.
+- **Fact:** "Here is what was observed / asserted / produced
+  upstream, with a `source` and a `claim_state`." Authored by
+  whoever wrote the source.
+
+If you're tempted to put observed state into attributes, the right
+question is: *who is the author of this assertion, and what is its
+provenance lifecycle?* If those answers are non-trivial, it's a Fact.
+
 ## Quick Start
 
 ```bash

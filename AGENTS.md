@@ -108,6 +108,22 @@ verifier/
 
 ---
 
+## C-1 resolution principle
+
+> `Proposal.attributes` exists for **proposal-shaped domain extension data**.
+> `Fact` remains for **observed or externally supplied evidence**.
+> Rules may read both through the same grounding path, but
+> **authorship / provenance remains distinct**.
+
+If you're tempted to put observed state into `Proposal.attributes`
+because the envelope is right there and constructing a `Fact` with
+`source` + `claim_state` feels like ceremony — the ergonomic pull is
+the symptom, not the justification. Authorship and provenance
+lifecycle are what distinguish the two channels. See CLAUDE.md for
+the full doctrine statement.
+
+---
+
 ## What this is not
 
 - Not a governor — verdicts only, governance is downstream

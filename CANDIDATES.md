@@ -64,9 +64,20 @@ the four-field audit spine (action/actor/target/scope) stays put.
 Attribute keys appear in the grounded set as `(proposal, key)` so rule
 atoms reference them the same way they reference core fields.
 
-**Boundary preserved.** Attributes are *proposed intent*. Facts remain
-*external evidence*. Rules can refer to both, but the channels do not
-collapse into each other.
+**Resolution principle (the doctrine to preserve).**
+
+> `Proposal.attributes` exists for **proposal-shaped domain extension data**.
+> `Fact` remains for **observed or externally supplied evidence**.
+> Rules may read both through the same grounding path, but
+> **authorship / provenance remains distinct**.
+
+If a future change makes it ergonomically convenient to stuff observed
+state into `Proposal.attributes` because the envelope is right there
+and constructing a `Fact` with `source` + `claim_state` feels like
+ceremony — that ergonomic pull is the warning sign, not the
+justification. Authorship and provenance lifecycle are exactly what
+distinguish the two channels. See CLAUDE.md for the full doctrine
+statement.
 
 **Migration outcome.** All four synthetic workflows (W1 Standing, W3
 LLM claim promotion, W4 NQ suppression) migrated to use attributes
