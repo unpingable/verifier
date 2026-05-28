@@ -132,6 +132,27 @@ the full doctrine statement.
 
 ---
 
+## Boundary contract with the rest of the constellation
+
+The verifier sits next to NQ, Standing, Continuity, and Wicket. It
+does not call them. It does not fetch truth. Facts and rules arrive
+cooked; the verifier checks. Verdicts produced by the verifier are
+*evidence* for downstream consumers, not authority.
+
+The full boundary contract — invariants in force today, the named
+provenance-metadata shape, the no-remote-verifierd posture — is in
+[VERIFIER_TYPED_INPUT_PROVENANCE_GAP.md](./VERIFIER_TYPED_INPUT_PROVENANCE_GAP.md).
+That document is a **named surface, doctrine in force now**; the
+implementation of the metadata shape is forcing-case-gated, but the
+contract is not optional.
+
+If a change in this repo would let the verifier fetch upstream truth,
+make network calls on the hot path, let `allowed` get re-read as
+`authorized`, or let provenance metadata become a rule-level source
+policy DSL, that change is wrong even if the tests pass.
+
+---
+
 ## When you're unsure
 
 Ask for clarification rather than guessing, especially around:
@@ -139,6 +160,8 @@ Ask for clarification rather than guessing, especially around:
 - Whether a fact should be modeled as presence vs. value
 - Anything that changes the closed-world assumption
 - Anything that changes the verdict triad or its aggregation rules
+- Anything that adds upstream calls, network surfaces, or
+  source-attribution machinery — see the boundary contract above
 - Whether the verifier should adopt a Lean-side concept (verdict-vocabulary porting requires design review, not just implementation)
 
 ---

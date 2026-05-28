@@ -1,10 +1,35 @@
 # verifier
 
-Formal admissibility verifier sidecar using Z3. Takes proposals, facts, and constraint rules; returns explainable verdicts.
+A border cop between measurement and claim.
 
-Verifier is part of the Governor ecosystem, but it is not Governor-gated. It can be used directly as a Python library, a standalone CLI, or an MCP tool.
+The verifier does not decide whether the world is true. It checks whether a
+system's emitted claims are licensed by the evidence it actually has —
+taking proposals, facts, and named constraint rules, compiling them to Z3,
+and returning explainable verdicts.
+
+It is not an oracle. It is not a judge. It is a constraint gate against
+epistemic overreach: before a monitor, labeler, report, or agentic
+workflow turns observations into findings, and findings into claims,
+the claim must pass admissibility.
+
+Verifier is part of the Governor ecosystem, but it is not Governor-gated.
+It can be used directly as a Python library, a standalone CLI
+(`verifier-check`), or an MCP tool (`verifier-mcp`).
 
 > *The verifier can express verdict structure without owning domain truth.*
+>
+> *Verifier can prove a proposal violates supplied rules.*
+> *It cannot prove the world supplied the right facts.*
+
+The first keeper is the architectural property — the verifier does
+not grow domain opinions. The second is the consumer-facing warning —
+a verifier verdict is evidence, not authority.
+
+For constellation consumers (NQ, Standing, Continuity, Wicket, …):
+the boundary contract and the named provenance-metadata shape live in
+[VERIFIER_TYPED_INPUT_PROVENANCE_GAP.md](./VERIFIER_TYPED_INPUT_PROVENANCE_GAP.md).
+That document specifies the invariants in force today and the
+metadata shape adapters should plan against when consumers wire in.
 
 ## What it does
 

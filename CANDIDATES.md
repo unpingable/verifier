@@ -10,6 +10,15 @@ When a candidate is resolved (built or rejected), migrate the conclusion
 into CLAUDE.md / AGENTS.md / README.md as appropriate and remove the entry
 here.
 
+**Boundary-contract questions** — anything about how facts/rules enter
+the verifier from upstream constellation tools (NQ, Standing,
+Continuity, Wicket, …) without laundering origin or standing — live in
+[VERIFIER_TYPED_INPUT_PROVENANCE_GAP.md](./VERIFIER_TYPED_INPUT_PROVENANCE_GAP.md).
+That doc is a **named surface with doctrine in force today**, on a
+separate axis from this register (cross-tool seam, not IR shape).
+Construction of the metadata schema stays forcing-case-gated; the
+shape and contract do not.
+
 ## Read of the register after Synthetic Workflows 1–4 + C-1 patch
 
 The verifier has now survived four semantically different synthetic
