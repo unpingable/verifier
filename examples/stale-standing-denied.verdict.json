@@ -1,0 +1,52 @@
+{
+  "schema_version": "0.3.0",
+  "status": "denied",
+  "failed_rules": [
+    {
+      "rule_id": "standing.scope_match",
+      "description": "Actor's granted scope must match the proposal scope",
+      "severity": "deny",
+      "kind": "standing"
+    }
+  ],
+  "used_facts": [],
+  "warnings": [],
+  "missing_facts": [
+    {
+      "rule_id": "standing.scope_match",
+      "subject": "actor",
+      "field": "granted_scope"
+    }
+  ],
+  "contradictions": [],
+  "stale_facts": [
+    {
+      "rule_id": "standing.scope_match",
+      "subject": "actor",
+      "field": "granted_scope",
+      "source": "standing:grant-101",
+      "claim_state": "expired"
+    }
+  ],
+  "dimension_verdicts": {
+    "standing": {
+      "status": "missing",
+      "failed_rules": [
+        {
+          "rule_id": "standing.scope_match",
+          "description": "Actor's granted scope must match the proposal scope",
+          "severity": "deny",
+          "kind": "standing"
+        }
+      ],
+      "missing_facts": [
+        {
+          "rule_id": "standing.scope_match",
+          "subject": "actor",
+          "field": "granted_scope"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

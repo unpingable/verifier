@@ -1,0 +1,28 @@
+{
+  "proposal": {
+    "action": "deploy",
+    "actor": "worker-a",
+    "target": "service/api",
+    "scope": "prod",
+    "attributes": {}
+  },
+  "facts": [
+    {
+      "subject": "actor",
+      "field": "granted_scope",
+      "value": "prod",
+      "source": "standing:grant-101",
+      "claim_state": "expired"
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "standing.scope_match",
+      "description": "Actor's granted scope must match the proposal scope",
+      "kind": "standing",
+      "require": [
+        { "subject": "actor", "field": "granted_scope", "op": "eq", "value": "prod" }
+      ]
+    }
+  ]
+}

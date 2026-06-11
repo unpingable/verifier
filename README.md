@@ -31,6 +31,60 @@ the boundary contract and the named provenance-metadata shape live in
 That document specifies the invariants in force today and the
 metadata shape adapters should plan against when consumers wire in.
 
+## 30-second specimen
+
+A deploy request that *looks* fully credentialed — the actor was granted `prod`
+scope — but the grant **expired before the spend**. Conventional auth says yes; the
+verifier denies, and the verdict says exactly why.
+
+`examples/stale-standing-denied.json`:
+
+```json
+{
+  "proposal": { "action": "deploy", "actor": "worker-a", "target": "service/api", "scope": "prod" },
+  "facts": [
+    { "subject": "actor", "field": "granted_scope", "value": "prod",
+      "source": "standing:grant-101", "claim_state": "expired" }
+  ],
+  "rules": [
+    { "rule_id": "standing.scope_match", "kind": "standing",
+      "description": "Actor's granted scope must match the proposal scope",
+      "require": [ { "subject": "actor", "field": "granted_scope", "op": "eq", "value": "prod" } ] }
+  ]
+}
+```
+
+```bash
+verifier-check examples/stale-standing-denied.json
+```
+
+Verdict (abridged — `dimension_verdicts` and empty lists omitted; the full,
+test-pinned output is `examples/stale-standing-denied.verdict.json`):
+
+```json
+{
+  "status": "denied",
+  "failed_rules": [
+    { "rule_id": "standing.scope_match",
+      "description": "Actor's granted scope must match the proposal scope",
+      "severity": "deny", "kind": "standing" }
+  ],
+  "used_facts": [],
+  "stale_facts": [
+    { "rule_id": "standing.scope_match", "subject": "actor", "field": "granted_scope",
+      "source": "standing:grant-101", "claim_state": "expired" }
+  ]
+}
+```
+
+The grant existed. It even matched. It was just **expired at decision time**, so it
+could not ground the rule (invariant 4), `used_facts` is empty (the aged-out grant
+was dropped, not counted), and the denial *names the rule* while *surfacing the
+dropped evidence* (`stale_facts`) instead of failing opaquely. That is the whole tool
+in fifteen seconds: not "we said no," but "your credential was real, stale, and here
+is the field that proves it." (Exit code is `0` — a denied verdict is a successful
+run, not a crash.)
+
 ## What it does
 
 - Checks whether a proposed action is admissible given grounded facts and named constraint rules
@@ -160,8 +214,20 @@ Every `Fact` carries a `claim_state` (default `current`). Non-current facts (`st
 
 ## Quick start
 
+Thirty seconds to a verdict:
+
 ```bash
 python -m venv .venv && source .venv/bin/activate
+pip install -e .
+
+# the specimen from the top of this README — prints a `denied` verdict, exit 0
+verifier-check examples/stale-standing-denied.json
+```
+
+Develop / run the suite (the example above is pinned by `tests/test_examples.py`,
+so the README's verdict can't silently drift from what the code emits):
+
+```bash
 pip install -e ".[dev]"
 pytest tests/ -v
 ```
