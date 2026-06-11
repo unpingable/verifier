@@ -1,6 +1,6 @@
 # verifier
 
-A border cop between measurement and claim.
+A boundary checker between measurement and claim.
 
 The verifier does not decide whether the world is true. It checks whether a
 system's emitted claims are licensed by the evidence it actually has —
