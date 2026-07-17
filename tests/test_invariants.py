@@ -53,3 +53,26 @@ def test_presence_allows():
     assert verdict.status == "allowed"
     assert verdict.failed_rules == []
     assert verdict.missing_facts == []
+
+
+def test_solver_unknown_cannot_produce_allowed(monkeypatch):
+    """A solver `unknown` result must fail closed.
+
+    Z3's check() returns sat / unsat / unknown.  With the current finite
+    string theory `unknown` is unreachable, but the guarantee has to hold
+    in code, not by accident of the theory: an undecided rule is not a
+    satisfied rule.  This pins the seam that `check() != unsat` would
+    reopen (unknown counted as pass).  See VERIFIER_FAIL_LOGICAL_GAP.md
+    ("UNKNOWN is refusal")."""
+    import z3
+
+    monkeypatch.setattr(z3.Solver, "check", lambda self, *a, **k: z3.unknown)
+
+    # Same inputs as test_presence_allows — would be `allowed` if the
+    # solver could decide.  With the solver undecided, it must not be.
+    facts = [Fact(subject="target", field="x", value="y", source="test:fixture")]
+    verdict = verify(PROPOSAL, facts=facts, rules=[UNCONDITIONAL_REQUIRES_X])
+
+    assert verdict.status != "allowed"
+    assert verdict.status == "denied"
+    assert [f.rule_id for f in verdict.failed_rules] == ["invariant.requires_x"]

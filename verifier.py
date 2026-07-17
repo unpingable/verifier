@@ -15,7 +15,7 @@ governance decisions happen downstream.
 
 from __future__ import annotations
 
-from z3 import BoolVal, Solver, StringVal, unsat
+from z3 import BoolVal, Solver, StringVal, sat
 
 from compiler import _has_fact, compile_fact, compile_proposal, compile_rule_into
 from models import (
@@ -171,7 +171,12 @@ def _check_rule(
 
     compile_rule_into(solver, rule)
 
-    return solver.check() != unsat
+    # Unknown fails closed.  Z3 returns sat / unsat / unknown; a rule the
+    # solver cannot decide is not satisfied.  With the current finite
+    # string theory `unknown` is unreachable, but the guarantee ("undecided
+    # cannot widen authority") must hold in code, not by accident of the
+    # theory.  See VERIFIER_FAIL_LOGICAL_GAP.md.
+    return solver.check() == sat
 
 
 def verify(

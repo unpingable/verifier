@@ -26,6 +26,7 @@ This is the substrate property. Confirmed across three semantically different sy
 5. The pre-gate is **scoped**: a non-current fact unrelated to any rule produces no diagnostic and no denial. No global stale-scanning.
 6. `invalid_input` is a structural failure, not a member of the admissibility triad (`allowed | advisory | denied`)
 7. Verdict is a pure function of `{proposal, facts, rules}` — order of facts and rules does not affect the verdict
+8. A solver `unknown` result cannot produce `allowed` — undecided is denied, not passed. Fail-logical doctrine (bounded adjudication as a third mode beside fail-open/fail-closed) lives in VERIFIER_FAIL_LOGICAL_GAP.md; that doc is canonical for the result vocabulary and custody boundary.
 
 ## C-1 resolution principle
 

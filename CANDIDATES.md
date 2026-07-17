@@ -19,13 +19,28 @@ separate axis from this register (cross-tool seam, not IR shape).
 Construction of the metadata schema stays forcing-case-gated; the
 shape and contract do not.
 
-## Read of the register after Synthetic Workflows 1–4 + C-1 patch
+**Fail-logical adjudication questions** — bounded entailment /
+consistency / plan-existence queries as a third mode beside fail-open
+and fail-closed, result vocabulary, solver receipts, custody boundary
+for proof machinery — live in
+[VERIFIER_FAIL_LOGICAL_GAP.md](./VERIFIER_FAIL_LOGICAL_GAP.md). Same
+register as the provenance gap: named surface, adjudication doctrine
+in force, construction of the query surface forcing-case-gated.
+Wind-tunneled by Synthetic Workflow 5.
 
-The verifier has now survived four semantically different synthetic
+## Read of the register after Synthetic Workflows 1–5
+
+The verifier has now survived five semantically different synthetic
 domains — Standing grant (authority/lifecycle), release gate (mundane
 constraint checklist), LLM claim promotion (basis/advisory/durable
-boundary), NQ suppression (operationally rich gate). All friction
-concentrated on Proposal shape (C-1). The substrate property holds:
+boundary), NQ suppression (operationally rich gate), Nightshift
+recovery (entailment under staged authority). Friction through W4
+concentrated on Proposal shape (C-1); W5 deliberately probed the
+fail-logical boundary and its friction concentrated *outside* the IR
+(derivations without receipts, coexistence in the wrong register,
+plan existence inexpressible) — banked in
+VERIFIER_FAIL_LOGICAL_GAP.md rather than here. The substrate property
+holds:
 
 > *The verifier can express verdict structure without owning domain truth.*
 
@@ -36,11 +51,15 @@ Current read on the register:
   domain-specific extension data; core spine (action/actor/target/scope)
   preserved as the audit grammar. All synthetic fixtures migrated;
   no rule changes needed. Migrated to "Resolved" section below.
-- **C-2 (No variable binding).** Real, but **dangerous**. Two friction
-  shapes seen so far: per-grant rule duplication (W1) and pre-computed
-  boolean facts for interval comparison (W4). Both workarounds work.
+- **C-2 (No variable binding).** Real, but **dangerous**. Three friction
+  shapes seen: per-grant rule duplication (W1), pre-computed boolean
+  facts for interval comparison (W4), and pre-computed entailment
+  booleans for grant-covers-action (W5). All workarounds work.
   This is how a boring verifier turns into a tiny logic programming
-  language wearing a fake mustache. Resist.
+  language wearing a fake mustache. Resist — and note the W5 read:
+  the pressure may eventually resolve into a separate query class
+  (fail-logical adjudication) rather than IR growth. See
+  VERIFIER_FAIL_LOGICAL_GAP.md.
 - **C-3 (`scope` collision).** Standing-side terminology debt. Out of
   scope for verifier.
 - **C-4 (`claim_state` pre-gate).** Working. Positive signal.
@@ -121,6 +140,13 @@ value. Atoms cannot compare two atoms (e.g.
   (`duration_within_window`). The adapter does the arithmetic; the
   verifier checks the result for equality. The IR is deliberately
   arithmetic-free.
+- **Synthetic 5 (Nightshift recovery).** Third shape: "does the
+  staged grant cover this restart?" is scope inclusion — a
+  *derivation*, not arithmetic — and enters as an adapter-precomputed
+  boolean (`grant_covers_restart`). The interesting reasoning step
+  happens outside the verifier with no receipt. This sighting is
+  banked as fail-logical evidence (VERIFIER_FAIL_LOGICAL_GAP.md), not
+  as pressure to grow the IR.
 
 **Question.** Is per-grant rule duplication acceptable indefinitely, or
 should the IR grow some form of variable binding / atom-pair comparison?

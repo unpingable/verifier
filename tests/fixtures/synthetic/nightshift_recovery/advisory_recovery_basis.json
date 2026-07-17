@@ -1,0 +1,183 @@
+{
+  "proposal": {
+    "action": "restart_service",
+    "actor": "nightshift-agent",
+    "target": "service/labelwatch-api",
+    "scope": "ops",
+    "attributes": {
+      "recovery_stage": "service_restart",
+      "disturbance_declared": true,
+      "reason": "wal_replay_stall"
+    }
+  },
+  "facts": [
+    {
+      "subject": "maintenance_window",
+      "field": "declared",
+      "value": true,
+      "source": "nq:declaration-2026-07-16"
+    },
+    {
+      "subject": "replication",
+      "field": "state",
+      "value": "healthy",
+      "source": "nq-witness"
+    },
+    {
+      "subject": "failover",
+      "field": "active",
+      "value": false,
+      "source": "nq-witness"
+    },
+    {
+      "subject": "backup",
+      "field": "last_verified_state",
+      "value": "verified",
+      "source": "backupd:receipt-4411"
+    },
+    {
+      "subject": "anomaly",
+      "field": "detector_signal",
+      "value": "restart_recommended",
+      "source": "heuristic:anomaly-detector"
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "ag.staged_recovery_authority",
+      "description": "A staged recovery grant covering service restart supports the restart stage it covers",
+      "kind": "basis",
+      "basis_effect": "actionable",
+      "when": [
+        {
+          "subject": "authority",
+          "field": "staged_grant",
+          "op": "eq",
+          "value": "recovery"
+        },
+        {
+          "subject": "authority",
+          "field": "grant_covers_restart",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "require": [
+        {
+          "subject": "proposal",
+          "field": "recovery_stage",
+          "op": "eq",
+          "value": "service_restart"
+        }
+      ]
+    },
+    {
+      "rule_id": "ns.anomaly_heuristic_heard",
+      "description": "A heuristic detector recommendation can be heard but cannot support action",
+      "kind": "basis",
+      "basis_effect": "advisory",
+      "when": [
+        {
+          "subject": "anomaly",
+          "field": "detector_signal",
+          "op": "eq",
+          "value": "restart_recommended"
+        }
+      ],
+      "require": []
+    },
+    {
+      "rule_id": "ns.disturbance_declared",
+      "description": "Planned disruptive work must be declared to the witnessing system before it starts",
+      "kind": "constraint",
+      "when": [
+        {
+          "subject": "proposal",
+          "field": "action",
+          "op": "eq",
+          "value": "restart_service"
+        }
+      ],
+      "require": [
+        {
+          "subject": "maintenance_window",
+          "field": "declared",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "subject": "proposal",
+          "field": "disturbance_declared",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "rule_id": "ns.replication_invariant",
+      "description": "Restart must not proceed unless replication is in a safe state",
+      "kind": "constraint",
+      "when": [
+        {
+          "subject": "proposal",
+          "field": "action",
+          "op": "eq",
+          "value": "restart_service"
+        }
+      ],
+      "require": [
+        {
+          "subject": "replication",
+          "field": "state",
+          "op": "in",
+          "value": [
+            "healthy",
+            "recovering"
+          ]
+        }
+      ]
+    },
+    {
+      "rule_id": "ns.no_active_failover",
+      "description": "Restart must not race an active failover",
+      "kind": "constraint",
+      "when": [
+        {
+          "subject": "proposal",
+          "field": "action",
+          "op": "eq",
+          "value": "restart_service"
+        }
+      ],
+      "require": [
+        {
+          "subject": "failover",
+          "field": "active",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "rule_id": "ns.backup_verified",
+      "description": "Restart requires a verified recent backup receipt",
+      "kind": "constraint",
+      "when": [
+        {
+          "subject": "proposal",
+          "field": "action",
+          "op": "eq",
+          "value": "restart_service"
+        }
+      ],
+      "require": [
+        {
+          "subject": "backup",
+          "field": "last_verified_state",
+          "op": "eq",
+          "value": "verified"
+        }
+      ]
+    }
+  ]
+}

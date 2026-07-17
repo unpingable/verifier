@@ -515,3 +515,181 @@ def test_nq_suppression_no_basis_falls_through_like_release_gate():
     # No basis dimension — basis isn't in the dimension_verdicts dict.
     assert "basis" not in verdict.dimension_verdicts
     assert verdict.dimension_verdicts["constraint"].status == "passed"
+
+
+# ==================================================================
+# Workflow 5: Nightshift recovery — entailment under staged authority
+# ==================================================================
+#
+# Domain: Nightshift wants to restart a degraded service during a
+# declared maintenance window, under a staged recovery grant from AG,
+# with safety invariants (replication state, no active failover,
+# verified backup) witnessed by NQ.  A heuristic anomaly detector
+# also recommends the restart — a stochastic subsystem terminating in
+# a typed advisory basis.
+#
+# This workflow was run deliberately as the wind tunnel for the
+# **fail-logical** surface (see VERIFIER_FAIL_LOGICAL_GAP.md): it
+# poses an entailment-shaped question — "given staged authority,
+# declared window, and invariant witnesses, does the requested
+# recovery step follow?" — to find where the admissibility IR stops
+# and a bounded-adjudication surface would begin.  All five fixtures
+# share one rule set; only the world varies.
+#
+# Adapter sweat — what didn't translate cleanly:
+#
+# 1. **The entailment itself happens outside the verifier.**  "Does
+#    the staged grant cover this restart?" enters as an
+#    adapter-precomputed boolean fact (`authority.grant_covers_restart`,
+#    source ag:grant-77).  The verifier checks the *result* of the
+#    derivation; it does not perform the derivation, and no receipt of
+#    the derivation exists anywhere.  This is the fail-logical gap made
+#    visible in a fixture: the interesting reasoning step (grant-scope
+#    inclusion) is invisible to the proof machinery and unauditable.
+#    Related to C-2 but distinct — C-2 is arithmetic comparison; this
+#    is *derivation* (entailment between a grant's scope and a
+#    requested action).
+#
+# 2. **C-2, third sighting.**  Grant-covers-action is scope inclusion,
+#    which the IR cannot express (no atom-pair comparison, no set
+#    semantics).  W1: per-grant literal rules.  W4: adapter-precomputed
+#    interval boolean.  W5: adapter-precomputed entailment boolean.
+#    Three shapes of the same absence.  The directional lean on C-2
+#    ("resist variable binding") still holds for the *admissibility*
+#    surface — but W5 suggests the pressure may eventually resolve into
+#    a separate query class rather than IR growth.
+#
+# 3. **Plan existence and least-authority selection cannot even be
+#    posed.**  "Is restart the least-disturbance admissible action?"
+#    and "does any admissible action sequence reach the desired state?"
+#    have no encoding — no transitions, no effects, no objective
+#    functions in the IR.  This is not friction to patch; it is
+#    evidence that fail-logical adjudication is a *different query
+#    class*, not a stretch of this one.  Recorded as a build-trigger
+#    datum, not a wound.
+#
+# 4. **"Can two receipts coexist?" maps onto contradiction machinery —
+#    in the wrong register.**  Two current facts disagreeing on
+#    (backup, last_verified_state) produce `invalid_input`: correct
+#    behavior for a transport-level consistency check, and the
+#    contradiction diagnostic names both sources.  But coexistence-of-
+#    receipts as an *adjudication question* wants a first-class refusal
+#    ("these receipts cannot jointly hold, here is the conflict"), not
+#    a schema-failure register.  Also only the degenerate point case is
+#    checked (same subject+field); joint satisfiability of
+#    rule-mediated receipt sets is never asked.  Right machinery,
+#    wrong register — friction datum for the fail-logical vocabulary.
+#
+# 5. **Positive: declare-before-disturb composes cleanly.**  The
+#    global doctrine's "declaration precedes effect" enters as one
+#    window fact (nq:declaration-…) plus one proposal attribute
+#    (`disturbance_declared`) and one rule.  Multi-source provenance
+#    keeps carrying: ag / nq / nq-witness / backupd / verifyd /
+#    heuristic detector — six sources, no verifier opinion about any
+#    of them.
+#
+# 6. **Positive: advisory basis is exactly the "heard, not authority"
+#    channel for stochastic subsystems.**  The anomaly detector's
+#    recommendation terminates in a typed advisory basis: with no
+#    staged authority present, the verdict is `advisory` — the
+#    recommendation is heard, and cannot support action.  The
+#    stochastic-boundary discipline (model proposes syntax, never
+#    standing) is instantiable in the IR as it stands today.
+
+NIGHTSHIFT_RECOVERY_CASES = [
+    ("nightshift_recovery/allowed_recovery_within_authority.json", "allowed"),
+    ("nightshift_recovery/denied_invariant_violated.json",         "denied"),
+    ("nightshift_recovery/denied_missing_witness.json",            "denied"),
+    ("nightshift_recovery/invalid_conflicting_receipts.json",      "invalid_input"),
+    ("nightshift_recovery/advisory_recovery_basis.json",           "advisory"),
+]
+
+
+@pytest.mark.parametrize("fixture,expected", NIGHTSHIFT_RECOVERY_CASES)
+def test_nightshift_recovery_workflow(fixture, expected):
+    verdict = run_payload(_load(fixture))
+    assert verdict.status == expected, (
+        f"{fixture}: expected {expected}, got {verdict.status}"
+    )
+
+
+def test_nightshift_entailment_is_precomputed_by_adapter():
+    """Pins friction #1: the authority-entailment step ("does the
+    staged grant cover this restart?") is answered *outside* the
+    verifier and arrives as a boolean fact.  The basis rule checks the
+    result; the derivation itself has no receipt.  The fail-logical
+    surface exists to move exactly this step inside auditable proof
+    machinery."""
+    payload = _load("nightshift_recovery/allowed_recovery_within_authority.json")
+
+    # The entailment result is a fact authored by the AG adapter,
+    # not something the verifier derived.
+    entailment_facts = [
+        f for f in payload["facts"]
+        if (f["subject"], f["field"]) == ("authority", "grant_covers_restart")
+    ]
+    assert len(entailment_facts) == 1
+    assert entailment_facts[0]["source"] == "ag:grant-77"
+
+    verdict = run_payload(payload)
+    assert verdict.status == "allowed"
+    assert verdict.dimension_verdicts["basis"].status == "passed"
+
+
+def test_nightshift_missing_vs_violated_witness_are_distinguished():
+    """The closed-world machinery distinguishes 'no witness spoke'
+    (dimension status `missing`, missing_facts populated) from 'a
+    witness spoke against' (dimension status `failed`).  Operationally
+    these page differently: produce the evidence vs. do not restart."""
+    absent = run_payload(_load("nightshift_recovery/denied_missing_witness.json"))
+    assert absent.status == "denied"
+    assert absent.dimension_verdicts["constraint"].status == "missing"
+    assert [(m.subject, m.field) for m in absent.missing_facts] == [
+        ("replication", "state")
+    ]
+
+    against = run_payload(_load("nightshift_recovery/denied_invariant_violated.json"))
+    assert against.status == "denied"
+    assert against.dimension_verdicts["constraint"].status == "failed"
+    assert against.missing_facts == []
+    assert {r.rule_id for r in against.failed_rules} == {"ns.replication_invariant"}
+
+    # In both cases the staged authority itself was fine — the denial
+    # is about the world, not the grant.
+    assert absent.dimension_verdicts["basis"].status == "passed"
+    assert against.dimension_verdicts["basis"].status == "passed"
+
+
+def test_nightshift_conflicting_receipts_are_transport_not_verdict():
+    """Pins friction #4: two current receipts disagreeing on the same
+    (subject, field) produce `invalid_input` — a structural register,
+    not an admissibility verdict.  Rules are never evaluated.  The
+    contradiction diagnostic names both sources, so the consumer can
+    see *which* receipts cannot coexist.  A fail-logical consistency
+    query would want this answer in a first-class refusal register;
+    today the machinery is right and the register is transport."""
+    verdict = run_payload(_load("nightshift_recovery/invalid_conflicting_receipts.json"))
+
+    assert verdict.status == "invalid_input"
+    assert verdict.failed_rules == [], "rules must not be evaluated on contradictory input"
+    assert len(verdict.contradictions) == 1
+    c = verdict.contradictions[0]
+    assert (c.subject, c.field) == ("backup", "last_verified_state")
+    sources = {f.source for f in c.facts}
+    assert sources == {"backupd:receipt-4411", "verifyd:receipt-4412"}
+
+
+def test_nightshift_heuristic_detector_is_heard_not_authority():
+    """Pins friction #6 (positive): with no staged authority present,
+    the heuristic detector's recommendation fires the advisory basis
+    and the verdict is `advisory` — zero failures, zero warnings.  The
+    stochastic subsystem terminates in a typed artifact that can be
+    heard but cannot support action."""
+    verdict = run_payload(_load("nightshift_recovery/advisory_recovery_basis.json"))
+
+    assert verdict.status == "advisory"
+    assert verdict.failed_rules == []
+    assert verdict.warnings == []
+    # All safety constraints held — the refusal-to-allow is purely
+    # about the absence of actionable authority.
+    assert verdict.dimension_verdicts["constraint"].status == "passed"

@@ -30,6 +30,11 @@ the boundary contract and the named provenance-metadata shape live in
 [VERIFIER_TYPED_INPUT_PROVENANCE_GAP.md](./VERIFIER_TYPED_INPUT_PROVENANCE_GAP.md).
 That document specifies the invariants in force today and the
 metadata shape adapters should plan against when consumers wire in.
+The **fail-logical adjudication surface** — bounded entailment /
+consistency / plan-existence queries as a third mode beside fail-open
+and fail-closed, with its result vocabulary and custody boundary — is
+named in [VERIFIER_FAIL_LOGICAL_GAP.md](./VERIFIER_FAIL_LOGICAL_GAP.md)
+(doctrine in force; construction forcing-case-gated).
 
 ## 30-second specimen
 
@@ -211,6 +216,7 @@ Every `Fact` carries a `claim_state` (default `current`). Non-current facts (`st
 3. The verifier never invents values for ungrounded fields
 4. Stale / revoked / expired evidence cannot produce `allowed`
 5. Verdict.status is invariant under permutation of the input fact and rule lists
+6. A solver `unknown` result cannot produce `allowed` — undecided is denied, not passed
 
 ## Quick start
 
