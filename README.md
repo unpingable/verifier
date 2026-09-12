@@ -104,6 +104,15 @@ run, not a crash.)
 - Not a policy engine — rules are compiled from upstream domain systems
 - Not a replacement for standing, continuity, or custody — it only sees their typed IR
 
+## When to use it
+
+Use Verifier when a caller already has an encoded proposal, supplied facts, and
+named rules, and needs a bounded check of that exact input. It is optional:
+neither a workflow nor a human needs to formalize every task before proceeding.
+Do not use it to acquire facts, select a policy, establish source truth, or turn
+an `allowed` result into permission to act. See [HOWTO.md](HOWTO.md) for the
+CLI and stdio-MCP paths and their limits.
+
 ## Entry points
 
 Three surfaces, one core (`runner.run_payload`). A verdict produced through one
@@ -153,6 +162,20 @@ into `.mcp.json`:
   }
 }
 ```
+
+The server exposes only `verify` over NDJSON stdio. It does not fetch upstream
+truth or make verification mandatory for another tool.
+
+## Limits of the current surface
+
+`allowed` means the supplied current facts satisfied the supplied encoded rules;
+it is not a claim about the world, policy correctness, or action authority.
+There is no solver timeout input or typed timeout/translation-failure verdict at
+this revision. Internal Z3 `unknown` and an unsatisfied rule both become a failed
+rule in the emitted result, so callers must not read `denied` as a detailed
+solver diagnosis. The fail-logical third mode and typed result vocabulary remain
+named design in [VERIFIER_FAIL_LOGICAL_GAP.md](VERIFIER_FAIL_LOGICAL_GAP.md), not
+an implemented CLI or MCP feature.
 
 ## Verdict vocabulary
 

@@ -48,6 +48,12 @@ or an MCP tool (`verifier-mcp`). All three surfaces funnel through
 `runner.run_payload` — one truth, three wrappers. Never duplicate verification
 logic in the CLI or MCP server; add to `runner.py` instead.
 
+Select this tool only for an optional, bounded check of caller-encoded proposal,
+facts, and rules. It does not make formalization mandatory, acquire truth, choose
+policy, or authorize work. An `allowed` output is evidence about supplied input,
+not a world-correctness or action claim. The current surface has no solver timeout
+or typed timeout/translation-failure result; do not document one as implemented.
+
 ## Repository layout
 
 ```
